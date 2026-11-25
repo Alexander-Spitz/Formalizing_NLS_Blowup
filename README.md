@@ -52,3 +52,9 @@ proof round with subagents. For example, “Run the first proof round from
 PR.” [AGENTS.md](AGENTS.md) defines the coordinator's review and publication
 workflow. [PROGRESS.md](PROGRESS.md#first-proof-round) records the first
 independent tasks.
+
+Sign in to Claude Code on the coordinator's machine for the independent proof
+review. It reviews each committed candidate after the coordinator and local
+Lean gate pass, and before the coordinator opens its PR. The default reviewer
+is Claude Sonnet. GitHub Actions runs the required Lean check with its
+existing configuration.

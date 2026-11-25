@@ -51,16 +51,32 @@ shared import changes, and updates to `PROGRESS.md`.
 The coordinator reviews the actual diff before creating a PR. Compare each
 statement with the assignment and the source, including quantifiers, endpoint
 cases, and assumptions. Inspect `#print axioms` for the new public theorems.
-Review the branch against the latest `origin/main`, then run the same gate as
-GitHub on that worktree:
+Update the branch to the latest `origin/main`, then commit the reviewed
+candidate locally and run the same gate as GitHub on that checkout.
 
 ```sh
 LEAN_NUM_THREADS=2 python3 .github/check_proofs.py
 ```
 
-Commit and push a branch only after mathematical review and a passing local
-gate. Open one PR per reviewed milestone, with the declarations, paper
-reference, dependencies, and check results in its description. Verify that
-the required **Lean kernel and axioms** check passes for the published PR.
-The owner decides when to merge. Reassign any review findings before publishing
-or updating the PR. Update recorded progress from merged results.
+After the coordinator review and local gate pass, run the independent Claude
+review in the same worktree. Give it the assigned mathematical claim and the
+source reference. Supply any relevant Lean dependencies with `--context`.
+
+```sh
+python3 scripts/review-proof-with-claude.py --base origin/main \
+  --claim 'State the exact assigned result and paper section here.'
+```
+
+The script sends the committed diff, claim, frozen specification and
+definitions, and explicitly selected Lean context to Claude Code. Its
+review session has no file, shell, or GitHub tools. An approval is valid for
+the base and proof commit printed in the result. Resolve blocking findings
+and repeat the coordinator, Lean, and Claude checks on the revised commit.
+If Claude is unavailable or needs further context, keep the candidate local
+until the independent review passes.
+
+Push the approved commit and open one PR per reviewed milestone. Include the
+declarations, paper reference, dependencies, Lean check result, and Claude
+model and verdict in its description. Verify the required **Lean kernel and
+axioms** check passes for the published PR. The owner decides when to merge.
+Update recorded progress from merged results.
