@@ -1,6 +1,9 @@
 # Formalizing radial NLS blow-up
 
-Lean formalization of Theorem 1.1 for real `p > 5` in [the paper](main.pdf).
+Lean formalization of finite-time blow-up in both time directions for radial
+two-dimensional focusing NLS with negative energy and real `p ≥ 3`.
+The target proposition is [`Blowup.RadialNLSFiniteTimeBlowup`](BlowupFormalization/Specification.lean).
+The superquintic case `p > 5` follows the argument in [the paper](main.pdf).
 [Mathlib](https://github.com/leanprover-community/mathlib4) is the sole direct
 Lake dependency. The checked development uses only Lean's standard axioms
 `propext`, `Classical.choice`, and `Quot.sound`. Results cited in the paper

@@ -3,9 +3,8 @@ import Mathlib
 /-!
 # Basic definitions
 
-Everything the main theorem talks about is defined in this file, and only here.
-All definitions are deliberately explicit (plain integrals, no Sobolev-space
-types), so they can be compared with the paper by eye.
+The spatial and PDE definitions use explicit integrals and weak gradients so
+they can be compared with the paper directly.
 
 * `ℝ²` is the Euclidean plane.
 * A function `u₀ : ℝ² → ℂ` is in `H¹` with weak partial derivatives `Du₀ j`
@@ -72,6 +71,12 @@ noncomputable def energy (p : ℝ) (u : ℝ² → ℂ) (Du : Fin 2 → ℝ² →
 noncomputable def nonlinearity (p : ℝ) (z : ℂ) : ℂ :=
   (‖z‖ ^ (p - 1) : ℝ) * z
 
+/-- The integrand obtained by testing the focusing NLS against `φ`. -/
+noncomputable def nlsTestIntegrand (p : ℝ) (u : ℝ → ℝ² → ℂ) (φ : ℝ → ℝ² → ℝ)
+    (t : ℝ) (x : ℝ²) : ℂ :=
+  u t x * (-Complex.I * ((deriv (fun s ↦ φ s x) t : ℝ) : ℂ) + ((laplacian (φ t) x : ℝ) : ℂ))
+    + nonlinearity p (u t x) * (φ t x : ℂ)
+
 /-- `u` solves (1.1) on the time interval `J` in the following sense
 (the standard `H¹` solutions of [Cazenave]):
 
@@ -80,7 +85,7 @@ noncomputable def nonlinearity (p : ℝ) (z : ℂ) : ℂ :=
 * for every smooth compactly supported test function `φ(t, x)` whose support lies in
   `(interior J) × ℝ²`,
   `∫∫ u (-i ∂ₜφ + Δφ) + |u|^{p-1} u φ dx dt = 0`,
-  which is (1.1) `i uₜ + Δu + |u|^{p-1}u = 0` tested against `φ`. -/
+  with integrability for both integrals. This is (1.1) tested against `φ`. -/
 structure IsNLSSolution (p : ℝ) (J : Set ℝ) (u : ℝ → ℝ² → ℂ) (Du : ℝ → Fin 2 → ℝ² → ℂ) :
     Prop where
   h1 : ∀ t ∈ J, IsH1 (u t) (Du t)
@@ -91,7 +96,8 @@ structure IsNLSSolution (p : ℝ) (J : Set ℝ) (u : ℝ → ℝ² → ℂ) (Du 
   weak_equation : ∀ φ : ℝ → ℝ² → ℝ,
     ContDiff ℝ ∞ (Function.uncurry φ) → HasCompactSupport (Function.uncurry φ) →
     tsupport (Function.uncurry φ) ⊆ interior J ×ˢ Set.univ →
-    ∫ t, ∫ x, (u t x * (-Complex.I * ((deriv (fun s ↦ φ s x) t : ℝ) : ℂ) + ((laplacian (φ t) x : ℝ) : ℂ))
-        + nonlinearity p (u t x) * (φ t x : ℂ)) = 0
+    (∀ t, Integrable (nlsTestIntegrand p u φ t)) ∧
+      Integrable (fun t ↦ ∫ x, nlsTestIntegrand p u φ t x) ∧
+      ∫ t, ∫ x, nlsTestIntegrand p u φ t x = 0
 
 end Blowup
