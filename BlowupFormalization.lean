@@ -7,6 +7,7 @@ import BlowupFormalization.LocalizedVirial
 import BlowupFormalization.LocalizedVirialBound
 import BlowupFormalization.ScaleSelection
 import BlowupFormalization.Section5
+import BlowupFormalization.SmoothVirial
 import BlowupFormalization.SolutionFacts
 import BlowupFormalization.Specification
 import BlowupFormalization.TimeReversal
