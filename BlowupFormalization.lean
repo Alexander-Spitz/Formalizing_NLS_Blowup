@@ -7,6 +7,7 @@ import BlowupFormalization.LocalizedVirial
 import BlowupFormalization.LocalizedVirialBound
 import BlowupFormalization.MollifiedEquation
 import BlowupFormalization.Mollification
+import BlowupFormalization.MollifierConvergence
 import BlowupFormalization.ScaleSelection
 import BlowupFormalization.Section5
 import BlowupFormalization.SmoothVirial
