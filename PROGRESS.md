@@ -52,6 +52,16 @@ These results are merged on `main`.
 | `TimeReversal.lean` | Conjugate time reversal preserves maximality and transfers within-lifespan gradient limits at reflected endpoints. | [#10](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/10) |
 | `SmoothVirial.lean` | `hasDerivAt_localizedVariance_of_smooth_nls` establishes (4.4) for jointly `C²` solutions of the pointwise equation. | [#11](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/11) |
 
+## Fourth proof round
+
+These results are merged on `main`.
+
+| Module | Result | PR |
+|---|---|---|
+| `SmoothVirial.lean` | The first virial identity allows a pointwise forcing term, whose contribution is bounded by the product of the spatial L² norms. | [#12](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/12) |
+| `VirialContinuity.lean` | The localized variance and first virial expression are continuous on the time domain of a weak solution. | [#13](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/13) |
+| `Mollification.lean` | Spatial mollification maps L² data into smooth L² functions, commutes with the weak partial derivatives, and bounds the mass by the squared L¹ norm of the kernel times the input mass. | [#14](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/14) |
+
 ## Proof obligations
 
 - Prove the H¹ solution theory used by the paper: local existence and
