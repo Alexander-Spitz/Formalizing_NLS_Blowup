@@ -1,6 +1,6 @@
 import BlowupFormalization.Specification
 
-/-! # Conjugate time reversal for weak NLS solutions -/
+/-! # Conjugate time reversal for NLS solutions -/
 
 open Filter MeasureTheory Topology
 open scoped ComplexConjugate ContDiff
@@ -107,10 +107,58 @@ theorem IsNLSSolution.conj_time_reversal {p : ℝ} {J : Set ℝ} {u : ℝ → �
         _ = conj (∫ t, F t) := integral_conj
         _ = 0 := by rw [show (∫ t, F t) = 0 from hZero, map_zero]
 
+/-- Almost-everywhere equality of a function and its gradient is preserved by
+complex conjugation. -/
+theorem SameH1Data.conj {u v : ℝ² → ℂ} {Du Dv : Fin 2 → ℝ² → ℂ}
+    (h : SameH1Data u v Du Dv) :
+    SameH1Data (fun x ↦ conj (u x)) (fun x ↦ conj (v x))
+      (fun j x ↦ conj (Du j x)) (fun j x ↦ conj (Dv j x)) :=
+  ⟨h.1.fun_comp (starRingEnd ℂ), fun j ↦ (h.2 j).fun_comp (starRingEnd ℂ)⟩
+
+/-- A maximal solution remains maximal after conjugate time reversal.
+Reflect any competing solution back to the original time direction to apply maximality. -/
+theorem IsMaximalNLSSolution.conj_time_reversal {p : ℝ} {J : Set ℝ} {u : ℝ → ℝ² → ℂ}
+    {Du : ℝ → Fin 2 → ℝ² → ℂ} (h : IsMaximalNLSSolution p J u Du) :
+    IsMaximalNLSSolution p (Neg.neg ⁻¹' J) (fun t x ↦ conj (u (-t) x))
+      (fun t j x ↦ conj (Du (-t) j x)) where
+  isOpen := h.isOpen.preimage continuous_neg
+  ordConnected := h.ordConnected.preimage_anti (fun _ _ hle ↦ neg_le_neg hle)
+  zero_mem := by simpa only [Set.mem_preimage, neg_zero] using h.zero_mem
+  isSolution := h.isSolution.conj_time_reversal
+  restrict_of_same_data K v Dv hOpen hOrd hZero hv hData := by
+    have hData' :
+        SameH1Data (fun x ↦ conj (v (-0) x)) (u 0)
+          (fun j x ↦ conj (Dv (-0) j x)) (Du 0) := by
+      simpa only [neg_zero, starRingEnd_apply, star_star] using hData.conj
+    obtain ⟨hSub, hAgree⟩ := h.restrict_of_same_data (Neg.neg ⁻¹' K)
+      (fun s x ↦ conj (v (-s) x)) (fun s j x ↦ conj (Dv (-s) j x))
+      (hOpen.preimage continuous_neg) (hOrd.preimage_anti (fun _ _ hle ↦ neg_le_neg hle))
+      (by simpa only [Set.mem_preimage, neg_zero] using hZero) hv.conj_time_reversal hData'
+    have hMem (s : ℝ) (hs : s ∈ K) : -s ∈ Neg.neg ⁻¹' K := by
+      simpa only [Set.mem_preimage, neg_neg] using hs
+    refine ⟨fun s hs ↦ hSub (hMem s hs), ?_⟩
+    intro s hs
+    simpa only [neg_neg, starRingEnd_apply, star_star] using (hAgree (-s) (hMem s hs)).conj
+
 /-- Conjugation preserves the squared gradient norm. -/
 @[simp] theorem gradNormSq_conj (Du : Fin 2 → ℝ² → ℂ) :
     gradNormSq (fun j x ↦ conj (Du j x)) = gradNormSq Du := by
   simp only [gradNormSq, Complex.norm_conj]
+
+/-- The gradient norm tends to infinity at the reflected time from within the reflected
+lifespan exactly when the original gradient norm does so at the original time. -/
+theorem tendsto_gradNorm_conj_time_reversal_iff
+    (Du : ℝ → Fin 2 → ℝ² → ℂ) (J : Set ℝ) (t : ℝ) :
+    Tendsto (fun s ↦ Real.sqrt (gradNormSq (fun j x ↦ conj (Du (-s) j x))))
+      (𝓝[Neg.neg ⁻¹' J] (-t)) atTop ↔
+    Tendsto (fun s ↦ Real.sqrt (gradNormSq (Du s))) (𝓝[J] t) atTop := by
+  have hMap := (Homeomorph.neg ℝ).isEmbedding.map_nhdsWithin_eq
+    ((Neg.neg : ℝ → ℝ) ⁻¹' J) (-t)
+  change Filter.map Neg.neg (𝓝[Neg.neg ⁻¹' J] (-t)) =
+    𝓝[(Neg.neg : ℝ → ℝ) '' (Neg.neg ⁻¹' J)] (-(-t)) at hMap
+  rw [Set.image_preimage_eq (f := (Neg.neg : ℝ → ℝ)) J (Homeomorph.neg ℝ).surjective,
+    neg_neg] at hMap
+  simp only [gradNormSq_conj, ← hMap, tendsto_map'_iff, Function.comp_def]
 
 /-- Conjugate initial data have the same mass. -/
 @[simp] theorem mass_conj (u : ℝ² → ℂ) : mass (fun x ↦ conj (u x)) = mass u := by
