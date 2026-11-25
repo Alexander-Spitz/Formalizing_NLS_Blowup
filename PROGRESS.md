@@ -24,14 +24,13 @@ commit `3183ab12b0877a270f4210db571b2ff0d5333196`.
 
 ## First proof round
 
-Each task can start from the checked foundation. The coordinator assigns the
-worktrees and reviews the branches according to [AGENTS.md](AGENTS.md).
+These results are merged on `main`.
 
-| Task | Owned file | First deliverable |
+| Module | Result | PR |
 |---|---|---|
-| `localized-virial-initial-value` | `BlowupFormalization/LocalizedVirial.lean` | Prove the value bound in (4.7) using `virialWeight_le_sq`, `virialWeight_eq_zero`, and `compactMoment`. |
-| `h1-ae-invariance` | `BlowupFormalization/H1Data.lean` | Prove that `SameH1Data` preserves `IsH1`, mass, squared gradient norm, and energy. |
-| `exterior-exponents` | `BlowupFormalization/ExteriorExponents.lean` | Prove the identities and exponent bounds in (3.1)–(3.2) for `p > 5`, including Schrödinger admissibility and the Hölder relation for the point source. |
+| `H1Data.lean` | `SameH1Data` preserves `IsH1`, mass, squared gradient norm, and energy. | [#3](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/3) |
+| `LocalizedVirial.lean` | `eq_4_7_value` bounds the initial localized variance by `compactMoment`. | [#4](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/4) |
+| `ExteriorExponents.lean` | The exponents in (3.1)–(3.2) satisfy Schrödinger admissibility and the point-source Hölder relation for `p > 5`. | [#5](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/5) |
 
 ## Proof obligations
 
