@@ -1,0 +1,17 @@
+[project]
+name = "blowup-formalization"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Alexander Spitz", email = "150425520+Alexander-Spitz@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+blowup-formalization = "blowup_formalization:main"
+
+[build-system]
+requires = ["uv_build>=0.13.4,<0.14.0"]
+build-backend = "uv_build"
