@@ -1,5 +1,6 @@
 import BlowupFormalization.Calculus
 import BlowupFormalization.Defs
+import BlowupFormalization.H1Data
 import BlowupFormalization.ExteriorEstimate
 import BlowupFormalization.LocalizedVirial
 import BlowupFormalization.ScaleSelection
