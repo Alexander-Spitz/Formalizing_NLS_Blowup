@@ -12,5 +12,6 @@ import BlowupFormalization.SmoothVirial
 import BlowupFormalization.SolutionFacts
 import BlowupFormalization.Specification
 import BlowupFormalization.TimeReversal
+import BlowupFormalization.VirialContinuity
 import BlowupFormalization.VirialWeight
 import BlowupFormalization.WeightProperties
