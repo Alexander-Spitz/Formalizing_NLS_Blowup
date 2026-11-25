@@ -1,4 +1,9 @@
+import BlowupFormalization.Calculus
 import BlowupFormalization.Defs
-import BlowupFormalization.Assumptions
-import BlowupFormalization.VirialWeight
 import BlowupFormalization.ExteriorEstimate
+import BlowupFormalization.LocalizedVirial
+import BlowupFormalization.ScaleSelection
+import BlowupFormalization.Section5
+import BlowupFormalization.SolutionFacts
+import BlowupFormalization.VirialWeight
+import BlowupFormalization.WeightProperties
