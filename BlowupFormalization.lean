@@ -2,6 +2,7 @@ import BlowupFormalization.Calculus
 import BlowupFormalization.Defs
 import BlowupFormalization.H1Data
 import BlowupFormalization.ExteriorEstimate
+import BlowupFormalization.ExteriorExponents
 import BlowupFormalization.LocalizedVirial
 import BlowupFormalization.ScaleSelection
 import BlowupFormalization.Section5
