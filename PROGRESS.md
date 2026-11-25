@@ -32,12 +32,23 @@ These results are merged on `main`.
 | `LocalizedVirial.lean` | `eq_4_7_value` bounds the initial localized variance by `compactMoment`. | [#4](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/4) |
 | `ExteriorExponents.lean` | The exponents in (3.1)–(3.2) satisfy Schrödinger admissibility and the point-source Hölder relation for `p > 5`. | [#5](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/5) |
 
+## Second proof round
+
+These results are merged on `main`.
+
+| Module | Result | PR |
+|---|---|---|
+| `LocalizedVirial.lean` | `eq_4_7_deriv` bounds the first virial expression by four times the product of the gradient norm and the square root of the localized variance. | [#6](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/6) |
+| `LocalizedVirialBound.lean` | `virialSecondDeriv_virialWeight_le` proves the static estimate underlying (4.6) for `p ≥ 3` when the nonlinear density is integrable. | [#7](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/7) |
+| `TimeReversal.lean` | `IsNLSSolution.conj_time_reversal` reflects weak solutions in time with complex conjugation. Conjugation preserves H¹ membership, mass, squared gradient norm, energy, and radiality. | [#8](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/8) |
+
 ## Proof obligations
 
 - Prove the H¹ solution theory used by the paper: local existence and
   uniqueness, radiality preservation, conservation, continuation, and the
   Gagliardo–Nirenberg inequality for the chosen H¹ representation.
-- Prove the classical and localized virial identities, then (4.6)–(4.7).
+- Prove the classical and localized virial identities for weak H¹ solutions
+  to apply the bounds in (4.6)–(4.7) to their time derivatives.
 - Formalize the localized virial arguments for `3 ≤ p < 5` and for `p = 5`.
 - Prove the required dispersive estimates (including the cited prerequisites),
   Lemma 3.1, and Proposition 3.2.
