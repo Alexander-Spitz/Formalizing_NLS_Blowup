@@ -155,11 +155,12 @@ theorem integral_im_weighted_laplacian_eq_neg {A : ℝ² → ℝ} (hA : IsTestFu
     integral_im_weighted_partialDeriv_eq_neg hA hu 0,
     integral_im_weighted_partialDeriv_eq_neg hA hu 1, neg_add]
 
-/-- The first localized virial identity with a residual in the strong NLS equation.
-The imaginary part of the weighted residual contributes with a positive sign. -/
-theorem hasDerivAt_localizedVariance_of_forced_smooth_nls
-    {u : ℝ → ℝ² → ℂ} (hu : ContDiff ℝ 2 (Function.uncurry u))
-    {A : ℝ² → ℝ} (hA : IsTestFunction A) {p t : ℝ} {F : ℝ² → ℂ}
+/-- The forced first localized virial identity for a jointly C¹ function with a C² spatial
+slice at the time of differentiation. The weighted residual contributes with a positive sign. -/
+theorem hasDerivAt_localizedVariance_of_forced_nls
+    {u : ℝ → ℝ² → ℂ} (hu : ContDiff ℝ 1 (Function.uncurry u)) {t : ℝ}
+    (hSpace : ContDiff ℝ 2 (u t)) {A : ℝ² → ℝ} (hA : IsTestFunction A)
+    {p : ℝ} {F : ℝ² → ℂ}
     (hNLS : ∀ x, Complex.I * deriv (fun s ↦ u s x) t +
       laplacian (u t) x + nonlinearity p (u t x) = F x) :
     HasDerivAt (fun s ↦ ∫ x, A x * ‖u s x‖ ^ 2)
@@ -168,14 +169,12 @@ theorem hasDerivAt_localizedVariance_of_forced_smooth_nls
   let K (x : ℝ²) : ℂ := (A x : ℂ) * starRingEnd ℂ (u t x)
   let L (x : ℝ²) : ℝ := (K x * laplacian (u t) x).im
   let R (x : ℝ²) : ℝ := (K x * F x).im
-  have hu1 : ContDiff ℝ 1 (Function.uncurry u) := hu.of_le (by norm_num)
-  have hSpace : ContDiff ℝ 2 (u t) := hu.comp (contDiff_const.prodMk contDiff_id)
-  have hNorm : ContDiff ℝ 1 (Function.uncurry (fun s x ↦ ‖u s x‖ ^ 2)) := hu1.norm_sq ℂ
+  have hNorm : ContDiff ℝ 1 (Function.uncurry (fun s x ↦ ‖u s x‖ ^ 2)) := hu.norm_sq ℂ
   obtain ⟨hDensity_int, hVar⟩ :=
     integrable_hasDerivAt_integral_mul_of_contDiff hA.1.continuous hA.2 hNorm t
   have hDensity (x : ℝ²) :
       A x * deriv (fun s ↦ ‖u s x‖ ^ 2) t = 2 * (R x - L x) := by
-    have hd := hasDerivAt_time_slice hu1 t x
+    have hd := hasDerivAt_time_slice hu t x
     have hNormDeriv : deriv (fun s ↦ ‖u s x‖ ^ 2) t =
         2 * (deriv (fun s ↦ u s x) t * starRingEnd ℂ (u t x)).re := by
       simpa only [Complex.inner, ← hd.deriv] using hd.norm_sq.deriv
@@ -230,6 +229,18 @@ theorem hasDerivAt_localizedVariance_of_forced_smooth_nls
     rfl
   exact hValue ▸ hVar
 
+/-- The first localized virial identity with a residual for a jointly C² function. -/
+theorem hasDerivAt_localizedVariance_of_forced_smooth_nls
+    {u : ℝ → ℝ² → ℂ} (hu : ContDiff ℝ 2 (Function.uncurry u))
+    {A : ℝ² → ℝ} (hA : IsTestFunction A) {p t : ℝ} {F : ℝ² → ℂ}
+    (hNLS : ∀ x, Complex.I * deriv (fun s ↦ u s x) t +
+      laplacian (u t) x + nonlinearity p (u t x) = F x) :
+    HasDerivAt (fun s ↦ ∫ x, A x * ‖u s x‖ ^ 2)
+      (virialFirstDeriv A (u t) (fun j ↦ partialDeriv j (u t)) +
+        2 * (∫ x, ((A x : ℂ) * starRingEnd ℂ (u t x) * F x).im)) t :=
+  hasDerivAt_localizedVariance_of_forced_nls (hu.of_le (by norm_num))
+    (hu.comp (contDiff_const.prodMk contDiff_id)) hA hNLS
+
 /-- The first derivative of the localized variance (4.2) is the expression (4.4)
 for a jointly C² solution of the strong NLS equation at the time under consideration. -/
 theorem hasDerivAt_localizedVariance_of_smooth_nls
@@ -277,5 +288,19 @@ theorem abs_virialResidual_le {A : ℝ² → ℝ} (hA : Continuous A) {B : ℝ}
     _ = (2 * B) * (∫ x, ‖u x‖ * ‖F x‖) := by rw [integral_const_mul, mul_assoc]
     _ ≤ _ := by simpa only [mul_assoc] using
       mul_le_mul_of_nonneg_left hHolder (mul_nonneg two_pos.le hB0)
+
+/-- Passing to the limit in the first localized virial identity (4.4) on an open time
+set. The localized variances converge pointwise, while their main derivative terms and
+vanishing errors converge locally uniformly. -/
+theorem hasDerivAt_of_virial_approximation {ι : Type*} {l : Filter ι} [NeBot l]
+    {J : Set ℝ} (hJ : IsOpen J) {V C : ℝ → ℝ} {Vn Cn En : ι → ℝ → ℝ}
+    (hV : ∀ t ∈ J, Tendsto (fun n ↦ Vn n t) l (𝓝 (V t)))
+    (hDeriv : ∀ᶠ n in l, ∀ t ∈ J, HasDerivAt (Vn n) (Cn n t + En n t) t)
+    (hC : TendstoLocallyUniformlyOn Cn C l J)
+    (hE : TendstoLocallyUniformlyOn En 0 l J)
+    {t : ℝ} (ht : t ∈ J) : HasDerivAt V (C t) t := by
+  have hSum : TendstoLocallyUniformlyOn (Cn + En) C l J := by
+    simpa only [add_zero] using hC.add hE
+  exact hasDerivAt_of_tendstoLocallyUniformlyOn hJ hSum hDeriv hV ht
 
 end Blowup
