@@ -42,6 +42,16 @@ These results are merged on `main`.
 | `LocalizedVirialBound.lean` | `virialSecondDeriv_virialWeight_le` proves the static estimate underlying (4.6) for `p ≥ 3` when the nonlinear density is integrable. | [#7](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/7) |
 | `TimeReversal.lean` | `IsNLSSolution.conj_time_reversal` reflects weak solutions in time with complex conjugation. Conjugation preserves H¹ membership, mass, squared gradient norm, energy, and radiality. | [#8](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/8) |
 
+## Third proof round
+
+These results are merged on `main`.
+
+| Module | Result | PR |
+|---|---|---|
+| `Section5.lean` | `terminal_virial_neg` integrates the acceleration and initial bounds to prove strict negativity of the terminal variance. | [#9](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/9) |
+| `TimeReversal.lean` | Conjugate time reversal preserves maximality and transfers within-lifespan gradient limits at reflected endpoints. | [#10](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/10) |
+| `SmoothVirial.lean` | `hasDerivAt_localizedVariance_of_smooth_nls` establishes (4.4) for jointly `C²` solutions of the pointwise equation. | [#11](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/11) |
+
 ## Proof obligations
 
 - Prove the H¹ solution theory used by the paper: local existence and
