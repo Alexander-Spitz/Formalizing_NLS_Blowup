@@ -83,14 +83,17 @@ private lemma smooth_partial {f : ℝ² → ℝ} (hf : ContDiff ℝ ∞ f) (j : 
     ContDiff ℝ ∞ (partialDeriv j f) :=
   (hf.fderiv_right (m := ∞) (by simp)).clm_apply contDiff_const
 
+/-- Coordinate differentiation preserves smoothness and compact support. -/
+theorem IsTestFunction.partialDeriv {f : ℝ² → ℝ} (hf : IsTestFunction f) (j : Fin 2) :
+    IsTestFunction (Blowup.partialDeriv j f) :=
+  ⟨smooth_partial hf.1 j, hf.2.fderiv_apply _ _⟩
+
 /-- The Laplacian preserves smoothness and compact support. -/
-private lemma test_laplacian {f : ℝ² → ℝ} (hf : IsTestFunction f) :
-    IsTestFunction (laplacian f) := by
-  constructor
-  · exact (smooth_partial (smooth_partial hf.1 0) 0).add (smooth_partial (smooth_partial hf.1 1) 1)
-  · have hs {g : ℝ² → ℝ} (hg : HasCompactSupport g) (j : Fin 2) :
-        HasCompactSupport (partialDeriv j g) := hg.fderiv_apply _ _
-    exact (hs (hs hf.2 0) 0).add (hs (hs hf.2 1) 1)
+theorem IsTestFunction.laplacian {f : ℝ² → ℝ} (hf : IsTestFunction f) :
+    IsTestFunction (Blowup.laplacian f) := by
+  have h₀ := (hf.partialDeriv 0).partialDeriv 0
+  have h₁ := (hf.partialDeriv 1).partialDeriv 1
+  exact ⟨h₀.1.add h₁.1, h₀.2.add h₁.2⟩
 
 /-- The partial derivatives of the squared Euclidean norm are twice the coordinates. -/
 private lemma partial_norm_sq (j : Fin 2) :
@@ -121,7 +124,7 @@ theorem laplacian_virialWeight_eq_four {Q : ℝ} (hQ : 0 < Q) {x : ℝ²} (hx : 
     exact congrArg₂ (· + ·)
       (congrArg (fun L : ℝ² →L[ℝ] ℝ ↦ L (EuclideanSpace.single 0 1)) (hp 0).fderiv_eq)
       (congrArg (fun L : ℝ² →L[ℝ] ℝ ↦ L (EuclideanSpace.single 1 1)) (hp 1).fderiv_eq)
-  apply hball.closure (test_laplacian (virialWeight_isTestFunction hQ)).1.continuous continuous_const
+  apply hball.closure (virialWeight_isTestFunction hQ).laplacian.1.continuous continuous_const
   simpa [closure_ball _ hQ.ne'] using hx
 
 /-- Each coordinate differentiation of a dilated function contributes one dilation factor. -/
@@ -163,7 +166,7 @@ private lemma test_abs_bound {f : ℝ² → ℝ} (hf : IsTestFunction f) : ∃ C
 /-- ΔA_Q is bounded uniformly in Q. -/
 theorem laplacian_virialWeight_bound :
     ∃ C, ∀ Q > 0, ∀ x : ℝ², |laplacian (virialWeight Q) x| ≤ C := by
-  obtain ⟨C, hC⟩ := test_abs_bound (test_laplacian (virialWeight_isTestFunction one_pos))
+  obtain ⟨C, hC⟩ := test_abs_bound (virialWeight_isTestFunction one_pos).laplacian
   refine ⟨C, fun Q hQ x ↦ ?_⟩
   rw [laplacian_weight_dilate hQ]
   exact hC _
@@ -171,8 +174,8 @@ theorem laplacian_virialWeight_bound :
 /-- (4.3) ‖Δ²A_Q‖_∞ ≲ Q⁻². -/
 theorem bilaplacian_virialWeight_bound :
     ∃ C, ∀ Q > 0, ∀ x : ℝ², |laplacian (laplacian (virialWeight Q)) x| ≤ C / Q ^ 2 := by
-  have hΔ := test_laplacian (virialWeight_isTestFunction one_pos)
-  obtain ⟨C, hC⟩ := test_abs_bound (test_laplacian hΔ)
+  have hΔ := (virialWeight_isTestFunction one_pos).laplacian
+  obtain ⟨C, hC⟩ := test_abs_bound hΔ.laplacian
   refine ⟨C, fun Q hQ x ↦ ?_⟩
   rw [laplacian_weight_dilate hQ]
   have scale := laplacian_dilate hΔ.1 1 Q⁻¹
