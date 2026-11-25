@@ -104,7 +104,7 @@ def main():
     parser.add_argument("--base", default="origin/main", help="Latest verified base for the proof PR")
     parser.add_argument("--claim", required=True, help="Assigned mathematical claim and source reference")
     parser.add_argument("--context", action="append", default=[], help="Additional tracked project .lean file")
-    parser.add_argument("--model", default="sonnet", help="Claude model or alias")
+    parser.add_argument("--model", default="opus", help="Claude model or alias (default: opus)")
     args = parser.parse_args()
     if not args.claim.strip():
         parser.error("--claim must state the assigned mathematical result")

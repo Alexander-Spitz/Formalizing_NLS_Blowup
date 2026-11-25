@@ -59,8 +59,8 @@ LEAN_NUM_THREADS=2 python3 .github/check_proofs.py
 ```
 
 After the coordinator review and local gate pass, run the independent Claude
-review in the same worktree. Give it the assigned mathematical claim and the
-source reference. Supply any relevant Lean dependencies with `--context`.
+Opus review in the same worktree. Give it the assigned mathematical claim and
+the source reference. Supply any relevant Lean dependencies with `--context`.
 
 ```sh
 python3 scripts/review-proof-with-claude.py --base origin/main \
