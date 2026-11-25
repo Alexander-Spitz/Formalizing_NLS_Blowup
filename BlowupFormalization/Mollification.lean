@@ -109,7 +109,8 @@ theorem partialDeriv_mollify_kernel {ρ : ℝ² → ℝ} {f : ℝ² → ℂ} (h�
   exact convolution_precompR_apply L hfLoc (hρ.2.fderiv ℝ)
     (hρ₁.continuous_fderiv one_ne_zero) x _
 
-private theorem reflected_kernel_isTestFunction {ρ : ℝ² → ℝ} (hρ : IsTestFunction ρ)
+/-- Translation and reflection preserve the test function property. -/
+theorem reflected_kernel_isTestFunction {ρ : ℝ² → ℝ} (hρ : IsTestFunction ρ)
     (x : ℝ²) : IsTestFunction (fun y ↦ ρ (x - y)) := by
   refine ⟨hρ.1.comp (by fun_prop), ?_⟩
   let R := (Homeomorph.neg ℝ²).trans (Homeomorph.addLeft x)
@@ -117,7 +118,8 @@ private theorem reflected_kernel_isTestFunction {ρ : ℝ² → ℝ} (hρ : IsTe
   change HasCompactSupport (ρ ∘ R)
   exact hρ.2.comp_homeomorph R
 
-private theorem partialDeriv_reflected_kernel {ρ : ℝ² → ℝ} (hρ : ContDiff ℝ ∞ ρ)
+/-- Reflection contributes a minus sign to each coordinate derivative. -/
+theorem partialDeriv_reflected_kernel {ρ : ℝ² → ℝ} (hρ : ContDiff ℝ ∞ ρ)
     (x y : ℝ²) (j : Fin 2) :
     partialDeriv j (fun z ↦ ρ (x - z)) y = -partialDeriv j ρ (x - y) := by
   have hReflect := (hasFDerivAt_const (𝕜 := ℝ) x y).sub (hasFDerivAt_id y)
