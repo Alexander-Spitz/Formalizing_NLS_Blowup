@@ -47,11 +47,11 @@ The `main` ruleset requires a pull request, an up-to-date branch, and the
 ## Parallel proof work
 
 Start a Codex session in this trusted checkout and ask it to coordinate a
-proof round with subagents. For example, “Run the first proof round from
+proof round with subagents. For example, “Run the next proof round from
 `PROGRESS.md` with separate worktrees. Review each branch before opening its
 PR.” [AGENTS.md](AGENTS.md) defines the coordinator's review and publication
-workflow. [PROGRESS.md](PROGRESS.md#first-proof-round) records the first
-independent tasks.
+workflow. [PROGRESS.md](PROGRESS.md) records the merged milestones and
+the remaining proof obligations.
 
 Sign in to Claude Code on the coordinator's machine for the independent proof
 review. Claude Opus reviews each committed candidate after the coordinator and
