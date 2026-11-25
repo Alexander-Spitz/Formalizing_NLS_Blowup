@@ -6,6 +6,7 @@ import BlowupFormalization.ExteriorExponents
 import BlowupFormalization.LocalizedVirial
 import BlowupFormalization.LocalizedVirialBound
 import BlowupFormalization.Mollification
+import BlowupFormalization.MollifierConvergence
 import BlowupFormalization.ScaleSelection
 import BlowupFormalization.Section5
 import BlowupFormalization.SmoothVirial
