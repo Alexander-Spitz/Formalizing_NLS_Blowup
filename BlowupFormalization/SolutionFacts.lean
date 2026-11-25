@@ -55,7 +55,7 @@ noncomputable def compactMoment (u₀ : ℝ² → ℂ) (S : ℝ) : ℝ :=
   ∫ x in Metric.closedBall (0 : ℝ²) (10 * S), ‖x‖ ^ 2 * ‖u₀ x‖ ^ 2
 
 /-- On a ball the variance density is bounded by the mass density times the squared radius. -/
-private lemma variance_integrableOn_closedBall {u₀ : ℝ² → ℂ} (hu₀ : MemLp u₀ 2) (r : ℝ) :
+theorem variance_integrableOn_closedBall {u₀ : ℝ² → ℂ} (hu₀ : MemLp u₀ 2) (r : ℝ) :
     IntegrableOn (fun x : ℝ² ↦ ‖x‖ ^ 2 * ‖u₀ x‖ ^ 2) (Metric.closedBall 0 r) := by
   refine ((hu₀.norm.integrable_sq.const_mul (r ^ 2)).integrableOn).mono' ?_ ?_
   · exact (continuous_norm.pow 2).aestronglyMeasurable.mul hu₀.norm.integrable_sq.1.restrict
