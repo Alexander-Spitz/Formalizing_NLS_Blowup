@@ -30,24 +30,40 @@ private lemma norm_toLp_two {f : ℝ² → ℂ} (hf : MemLp f 2) :
     (by norm_num) (by norm_num) hf.aestronglyMeasurable]
   simp [Real.sqrt_eq_rpow, one_div]
 
+private lemma continuous_toLp_two {f : ℝ → ℝ² → ℂ} (hf : ∀ t : J, MemLp (f t) 2)
+    (hlim : ∀ t ∈ J, Tendsto (fun s ↦ ∫ x, ‖f s x - f t x‖ ^ 2) (𝓝[J] t) (𝓝 0)) :
+    Continuous (fun t : J ↦ (hf t).toLp (f t)) := by
+  apply continuous_iff_continuousAt.mpr
+  intro t
+  apply tendsto_iff_norm_sub_tendsto_zero.mpr
+  have hval : Tendsto Subtype.val (𝓝 t) (𝓝[J] ↑t) :=
+    tendsto_nhdsWithin_iff.2 ⟨continuous_subtype_val.continuousAt, .of_forall Subtype.property⟩
+  have hs := (hlim t t.property).comp hval
+  simp only [← MemLp.toLp_sub, norm_toLp_two, Pi.sub_apply]
+  simpa only [Real.sqrt_zero, Function.comp_def] using hs.sqrt
+
+/-- A solution is continuous on its time domain as a map into the `L²` space. -/
+theorem IsNLSSolution.continuous_toLp (h : IsNLSSolution p J u Du) :
+    Continuous (fun t : J ↦ (h.h1 t t.property).memL2.toLp (u t)) :=
+  continuous_toLp_two (f := u) (fun t ↦ (h.h1 t t.property).memL2) h.continuous_L2
+
+/-- Each weak spatial derivative is continuous on the time domain as a map into `L²`. -/
+theorem IsNLSSolution.continuous_grad_toLp (h : IsNLSSolution p J u Du) (j : Fin 2) :
+    Continuous (fun t : J ↦ ((h.h1 t t.property).memL2_partial j).toLp (Du t j)) :=
+  continuous_toLp_two (f := fun t ↦ Du t j) (fun t ↦ (h.h1 t t.property).memL2_partial j)
+    (fun t ht ↦ h.continuous_grad_L2 t ht j)
+
 /-- `t ↦ ‖∇u(t)‖₂²` is continuous on `J`, since `∇u ∈ C(J; L²)`. -/
 theorem IsNLSSolution.continuousOn_gradNormSq (h : IsNLSSolution p J u Du) :
     ContinuousOn (fun t ↦ gradNormSq (Du t)) J := by
   let D (j : Fin 2) (t : J) := ((h.h1 t t.property).memL2_partial j).toLp (Du t j)
-  have hD (j : Fin 2) : Continuous (D j) := by
-    apply continuous_iff_continuousAt.mpr
-    intro t
-    apply tendsto_iff_norm_sub_tendsto_zero.mpr
-    have hval : Tendsto Subtype.val (𝓝 t) (𝓝[J] ↑t) :=
-      tendsto_nhdsWithin_iff.2 ⟨continuous_subtype_val.continuousAt, .of_forall Subtype.property⟩
-    have hlim := (h.continuous_grad_L2 t t.property j).comp hval
-    simp only [D, ← MemLp.toLp_sub, norm_toLp_two, Pi.sub_apply]
-    simpa only [Real.sqrt_zero, Function.comp_def] using hlim.sqrt
+  have hD (j : Fin 2) : Continuous (D j) := h.continuous_grad_toLp j
   rw [continuousOn_iff_continuous_domRestrict]
   apply ((hD 0).norm.pow 2 |>.add ((hD 1).norm.pow 2)).congr
   intro t
   have hDj := (h.h1 t t.property).memL2_partial
-  simp only [Pi.add_apply, Pi.pow_apply, D, norm_toLp_two, Real.sq_sqrt (integral_nonneg (fun _ ↦ sq_nonneg _))]
+  simp only [Pi.add_apply, Pi.pow_apply, D, norm_toLp_two,
+    Real.sq_sqrt (integral_nonneg (fun _ ↦ sq_nonneg _))]
   exact (integral_add (hDj 0).norm.integrable_sq (hDj 1).norm.integrable_sq).symm
 
 /-- The compact moment (5.3): `H(S) = ∫_{|x| ≤ 10S} |x|² |u₀|²`. -/
