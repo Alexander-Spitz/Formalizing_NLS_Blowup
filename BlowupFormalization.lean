@@ -4,6 +4,7 @@ import BlowupFormalization.H1Data
 import BlowupFormalization.ExteriorEstimate
 import BlowupFormalization.ExteriorExponents
 import BlowupFormalization.LocalizedVirial
+import BlowupFormalization.LocalizedVirialBound
 import BlowupFormalization.ScaleSelection
 import BlowupFormalization.Section5
 import BlowupFormalization.SolutionFacts
