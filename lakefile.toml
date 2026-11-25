@@ -16,3 +16,4 @@ scope = "leanprover-community"
 
 [[lean_lib]]
 name = "BlowupFormalization"
+globs = ["BlowupFormalization.*"]

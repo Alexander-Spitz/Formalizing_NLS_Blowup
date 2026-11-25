@@ -1,21 +1,36 @@
-name: Lean Action CI
+name: Lean proofs
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+  merge_group:
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read # Read access to repository contents
-  pages: write # Write access to GitHub Pages
-  id-token: write # Write access to ID tokens
+  contents: read
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  check-proofs:
+    name: Lean kernel and axioms
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      LEAN_NUM_THREADS: 2
+      MATHLIB_CACHE_GET_URL: https://cache.mathlib.org/mathlib4
     steps:
-      - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
-      - uses: leanprover-community/docgen-action@v1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: leanprover/lean-action@fe408643ea7367d8c0404a8be3975bb145f5fb64 # v1.7.0
+        with:
+          auto-config: false
+          build: false
+          test: false
+          lint: false
+          use-github-cache: false
+          use-mathlib-cache: false
+      - name: Build, audit axioms, and replay proofs
+        run: python3 .github/check_proofs.py --get-mathlib-cache

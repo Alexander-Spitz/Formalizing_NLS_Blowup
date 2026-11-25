@@ -1,11 +1,10 @@
-import BlowupFormalization.Assumptions
+import BlowupFormalization.Defs
 
 /-!
 # Elementary facts about solutions and about the initial datum
 
 * restricting a solution to a smaller time interval;
 * continuity of `t ↦ ‖∇u(t)‖₂²`;
-* the lower bound `‖∇u(t)‖₂ ≥ g_*` of (5.2) for negative energy;
 * the compact moments `H(S) = ∫_{|x| ≤ 10S} |x|² |u₀|²` of (5.3) and the bound behind (5.6).
 -/
 
@@ -50,35 +49,6 @@ theorem IsNLSSolution.continuousOn_gradNormSq (h : IsNLSSolution p J u Du) :
   have hDj := (h.h1 t t.property).memL2_partial
   simp only [Pi.add_apply, Pi.pow_apply, D, norm_toLp_two, Real.sq_sqrt (integral_nonneg (fun _ ↦ sq_nonneg _))]
   exact (integral_add (hDj 0).norm.integrable_sq (hDj 1).norm.integrable_sq).symm
-
-/-- (5.2): for negative energy, `‖∇u(t)‖₂² ≥ g` for some `g > 0`, by conservation of energy and
-the Gagliardo–Nirenberg inequality: `(p+1)(½ G(t)² + e) = ‖u(t)‖_{p+1}^{p+1} ≤ C M G(t)^{p-1}`. -/
-theorem kinetic_lower_bound (hp : 1 < p) (h : IsNLSSolution p (Set.Ici 0) u Du)
-    (hE : energy p (u 0) (Du 0) < 0) :
-    ∃ g > 0, ∀ t ≥ 0, g ≤ gradNormSq (Du t) := by
-  obtain ⟨C, hC, hGN⟩ := gagliardo_nirenberg hp
-  let e := -(p + 1) * energy p (u 0) (Du 0)
-  have hpp : 0 < p + 1 := by linarith
-  have he : 0 < e := mul_pos_of_neg_of_neg (neg_neg_of_pos hpp) hE
-  have hK (t : ℝ) : 0 ≤ gradNormSq (Du t) := integral_nonneg (fun _ ↦ by positivity)
-  have hbound (t : ℝ) (ht : 0 ≤ t) :
-      e ≤ C * mass (u 0) * gradNormSq (Du t) ^ ((p - 1) / 2) := by
-    obtain ⟨hm, henergy⟩ := conservation_laws hp
-      (h.mono (Set.Icc_subset_Ici_self : Set.Icc 0 t ⊆ Set.Ici 0)) t ⟨ht, le_rfl⟩
-    have hpot := (hGN _ _ (h.h1 t ht)).2
-    rw [hm] at hpot
-    apply le_trans _ hpot
-    unfold e
-    rw [← henergy, energy]
-    field_simp [hpp.ne']
-    nlinarith [mul_nonneg hpp.le (hK t)]
-  have hCM : 0 < C * mass (u 0) := by
-    have hprod := he.trans_le (hbound 0 le_rfl)
-    exact pos_of_mul_pos_left hprod (Real.rpow_nonneg (hK 0) _)
-  refine ⟨(e / (C * mass (u 0))) ^ (((p - 1) / 2)⁻¹), Real.rpow_pos_of_pos (div_pos he hCM) _, ?_⟩
-  intro t ht
-  apply (Real.rpow_inv_le_iff_of_pos (div_nonneg he.le hCM.le) (hK t) (by linarith)).2
-  exact (div_le_iff₀ hCM).2 (by simpa [mul_comm] using hbound t ht)
 
 /-- The compact moment (5.3): `H(S) = ∫_{|x| ≤ 10S} |x|² |u₀|²`. -/
 noncomputable def compactMoment (u₀ : ℝ² → ℂ) (S : ℝ) : ℝ :=

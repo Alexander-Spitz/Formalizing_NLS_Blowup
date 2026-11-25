@@ -1,0 +1,6 @@
+/.github/ @Alexander-Spitz
+/lakefile.toml @Alexander-Spitz
+/lake-manifest.json @Alexander-Spitz
+/lean-toolchain @Alexander-Spitz
+/BlowupFormalization/Defs.lean @Alexander-Spitz
+/BlowupFormalization/Specification.lean @Alexander-Spitz
