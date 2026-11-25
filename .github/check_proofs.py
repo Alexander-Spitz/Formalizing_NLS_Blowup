@@ -1,4 +1,4 @@
-"""Check the Lake configuration, kernel proofs, and axiom dependencies."""
+"""Check the frozen statement, Lake configuration, kernel proofs, and axioms."""
 
 import argparse
 import json
@@ -9,6 +9,37 @@ from pathlib import Path
 
 LIBRARY = "BlowupFormalization"
 AUDITOR = Path(".github/CheckAxioms.lean")
+SPECIFICATION_TAG = "nls-blowup-spec-v1"
+SPECIFICATION_COMMIT = "1a95801e84b28b23d7ab9b51cb60fe9cbb95db9d"
+FROZEN_FILES = (
+    "BlowupFormalization/Specification.lean",
+    "BlowupFormalization/Defs.lean",
+    "lean-toolchain",
+    "lakefile.toml",
+    "lake-manifest.json",
+)
+
+
+def check_frozen_specification():
+    ref = f"refs/tags/{SPECIFICATION_TAG}^{{commit}}"
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "--verify", "--quiet", ref], text=True,
+        ).strip()
+    except subprocess.CalledProcessError:
+        raise SystemExit(
+            f"Fetch the frozen specification with git fetch origin tag {SPECIFICATION_TAG}"
+        ) from None
+    if commit != SPECIFICATION_COMMIT:
+        raise SystemExit(f"{SPECIFICATION_TAG} must point to {SPECIFICATION_COMMIT}, found {commit}.")
+
+    changes = subprocess.check_output([
+        "git", "diff", "--name-only", "--no-ext-diff", "--no-textconv",
+        commit, "--", *FROZEN_FILES,
+    ], text=True).splitlines()
+    if changes:
+        raise SystemExit(f"Files differ from frozen {SPECIFICATION_TAG}: {', '.join(changes)}")
+    print(f"Specification matches {SPECIFICATION_TAG} ({commit}).", flush=True)
 
 
 def project_modules():
@@ -67,6 +98,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--get-mathlib-cache", action="store_true")
     args = parser.parse_args()
+    check_frozen_specification()
     modules = project_modules()
     manifest = check_lake_configuration()
     subprocess.run(["lake", "resolve-deps"], check=True)

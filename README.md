@@ -9,6 +9,21 @@ Lake dependency. The checked development uses only Lean's standard axioms
 `propext`, `Classical.choice`, and `Quot.sound`. Results cited in the paper
 are proof obligations in [PROGRESS.md](PROGRESS.md).
 
+## Frozen statement
+
+The protected tag `nls-blowup-spec-v1` points to
+`1a95801e84b28b23d7ab9b51cb60fe9cbb95db9d`. It fixes the exact target
+proposition, its PDE and initial-data definitions, and the Lean and Mathlib
+versions used to interpret them. The project proof must inhabit
+`Blowup.RadialNLSFiniteTimeBlowup`.
+
+To inspect the statement at the frozen revision:
+
+```sh
+git fetch origin tag nls-blowup-spec-v1
+git show nls-blowup-spec-v1:BlowupFormalization/Specification.lean
+```
+
 ## Run the proof check
 
 Install [Elan](https://lean-lang.org/install/) and Python 3.11 or newer. From
@@ -19,17 +34,12 @@ LEAN_NUM_THREADS=2 python3 .github/check_proofs.py --get-mathlib-cache
 ```
 
 Omit `--get-mathlib-cache` when the dependency cache is already available.
-The check builds the library, audits each declaration's transitive axiom
-footprint, and replays the proof modules through the Lean kernel.
+The check compares the frozen files with the protected tag, builds the library,
+audits each declaration's transitive axiom footprint, and replays the proof
+modules through the Lean kernel.
 Keep project Lean sources in `BlowupFormalization/` so all of them are built
 and checked. The initial scaffold and its unfinished arguments remain
 available at commit `3183ab12b0877a270f4210db571b2ff0d5333196`.
 
-## Enforce the check on GitHub
-
-Once the workflow has reported its first result, create an active branch
-ruleset for `main` under **Settings → Rules → Rulesets**. Require a pull
-request, an up-to-date branch, and the **Lean kernel and axioms** status
-check from GitHub Actions. Leave the bypass list empty. Require code-owner
-review for CI and dependency changes when a reviewer distinct from the PR
-author is available.
+The `main` ruleset requires a pull request, an up-to-date branch, and the
+**Lean kernel and axioms** status check from GitHub Actions.
