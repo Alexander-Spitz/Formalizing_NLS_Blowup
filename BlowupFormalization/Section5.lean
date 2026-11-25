@@ -1,6 +1,9 @@
 import BlowupFormalization.Calculus
+import BlowupFormalization.WeakSecondVirial
 
 /-! # Scalar estimates for the scale and virial argument in Section 5 -/
+
+open MeasureTheory Set
 
 namespace Blowup
 
@@ -127,5 +130,31 @@ theorem terminal_virial_neg {p e T : ℝ} {V V₁ V₂ K : ℝ → ℝ}
     positivity
   dsimp only [b] at hTangent
   linarith only [hTangent, hInitial', hLoss, hStrict]
+
+/-- A weak H¹ solution cannot exist throughout the integration interval if its
+localized virial terms satisfy the bounds (5.5) and (5.8). -/
+theorem IsNLSSolution.false_of_terminal_virial_bounds
+    {p e Q T : ℝ} {J : Set ℝ} {u : ℝ → ℝ² → ℂ} {Du : ℝ → Fin 2 → ℝ² → ℂ}
+    (h : IsNLSSolution p J u Du) (hp : 3 ≤ p) (he : 0 < e) (hQ : 0 < Q) (hT : 0 < T)
+    (hTime : Icc 0 T ⊆ interior J)
+    (hAcceleration : ∀ t ∈ Icc 0 T, virialSecondDeriv p (virialWeight Q) (u t) (Du t) ≤
+      -4 * (p - 1) * e - 2 * (p - 3) * gradNormSq (Du t))
+    (hInitial : (∫ x, virialWeight Q x * ‖u 0 x‖ ^ 2) +
+      T * |virialFirstDeriv (virialWeight Q) (u 0) (Du 0)| ≤
+      (p - 3) * (∫ s in 0..T, (T - s) * gradNormSq (Du s))) : False := by
+  let A := virialWeight Q
+  have hA := virialWeight_isTestFunction hQ
+  have hK : ContinuousOn (fun t ↦ gradNormSq (Du t)) (Icc 0 T) :=
+    h.continuousOn_gradNormSq.mono (hTime.trans interior_subset)
+  have hK₀ (t : ℝ) (_ : t ∈ Icc 0 T) : 0 ≤ gradNormSq (Du t) :=
+    integral_nonneg (fun _ ↦ add_nonneg (sq_nonneg _) (sq_nonneg _))
+  have hV t (ht : t ∈ Icc 0 T) :=
+    (h.hasDerivAt_localizedVariance hp hA (hTime ht)).hasDerivWithinAt (s := Icc 0 T)
+  have hV₁ t (ht : t ∈ Icc 0 T) :=
+    (h.hasDerivAt_virialFirstDeriv hp hA (hTime ht)).hasDerivWithinAt (s := Icc 0 T)
+  have hNeg := terminal_virial_neg hp he hT hK hK₀ hV hV₁ hAcceleration hInitial
+  have hNonneg : 0 ≤ ∫ x, A x * ‖u T x‖ ^ 2 :=
+    integral_nonneg (fun x ↦ mul_nonneg (virialWeight_nonneg Q x) (sq_nonneg _))
+  exact hNeg.not_ge hNonneg
 
 end Blowup

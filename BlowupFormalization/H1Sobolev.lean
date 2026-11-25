@@ -555,31 +555,68 @@ theorem IsH1.memLp_of_two_le {u : ℝ² → ℂ} {Du : Fin 2 → ℝ² → ℂ}
         (hu.memL2_partial 0).eLpNorm_lt_top⟩, (hu.memL2_partial 1).eLpNorm_lt_top⟩)
   exact (hBound u Du hu).trans_lt hFinite
 
+/-- Strong convergence of H¹ data implies Lᵠ convergence for every finite real q ≥ 2. -/
+theorem IsH1.tendsto_toLp_of_two_le {ι : Type*} {l : Filter ι}
+    {f : ι → ℝ² → ℂ} {Df : ι → Fin 2 → ℝ² → ℂ}
+    {g : ℝ² → ℂ} {Dg : Fin 2 → ℝ² → ℂ} (hg : IsH1 g Dg)
+    (hf : ∀ i, IsH1 (f i) (Df i)) {q : ℝ} (hq : 2 ≤ q) [Fact (1 ≤ ENNReal.ofReal q)]
+    (hFun : Tendsto (fun i ↦ (hf i).memL2.toLp (f i)) l (𝓝 (hg.memL2.toLp g)))
+    (hGrad : ∀ j, Tendsto (fun i ↦ ((hf i).memL2_partial j).toLp (Df i j)) l
+      (𝓝 ((hg.memL2_partial j).toLp (Dg j)))) :
+    Tendsto (fun i ↦ ((hf i).memLp_of_two_le hq).toLp (f i)) l
+      (𝓝 ((hg.memLp_of_two_le hq).toLp g)) := by
+  obtain ⟨C, hC, hBound⟩ := exists_eLpNorm_h1_bound q hq
+  apply tendsto_iff_eNorm_sub_tendsto_zero.2
+  simp only [← MemLp.toLp_sub, Lp.eNorm_toLp]
+  have hU : Tendsto (fun i ↦ eLpNorm (f i - g) 2 volume) l (𝓝 0) := by
+    simpa only [← MemLp.toLp_sub, Lp.eNorm_toLp] using
+      tendsto_iff_eNorm_sub_tendsto_zero.1 hFun
+  have hD (j : Fin 2) :
+      Tendsto (fun i ↦ eLpNorm (Df i j - Dg j) 2 volume) l (𝓝 0) := by
+    simpa only [← MemLp.toLp_sub, Lp.eNorm_toLp] using
+      tendsto_iff_eNorm_sub_tendsto_zero.1 (hGrad j)
+  have hSum : Tendsto (fun i ↦
+      eLpNorm (f i - g) 2 volume + eLpNorm (Df i 0 - Dg 0) 2 volume +
+        eLpNorm (Df i 1 - Dg 1) 2 volume) l (𝓝 0) := by
+    simpa only [zero_add] using (hU.add (hD 0)).add (hD 1)
+  have hMajorant := ENNReal.Tendsto.const_mul (a := C) hSum (Or.inr hC)
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds
+    (by simpa only [mul_zero] using hMajorant) (fun _ ↦ zero_le) (fun i ↦ ?_)
+  exact hBound (f i - g) (Df i - Dg) ((hf i).sub hg)
+
 /-- Weak H¹ time continuity implies Lᵠ time continuity for every finite real q ≥ 2. -/
 theorem IsNLSSolution.continuous_toLp_of_two_le
     {p : ℝ} {J : Set ℝ} {u : ℝ → ℝ² → ℂ} {Du : ℝ → Fin 2 → ℝ² → ℂ}
     (h : IsNLSSolution p J u Du) {q : ℝ} (hq : 2 ≤ q) [Fact (1 ≤ ENNReal.ofReal q)] :
-    Continuous (fun t : J ↦ ((h.h1 t t.property).memLp_of_two_le hq).toLp (u t)) := by
-  obtain ⟨C, hC, hBound⟩ := exists_eLpNorm_h1_bound q hq
-  refine continuous_iff_continuousAt.2 fun t ↦ ?_
-  apply tendsto_iff_eNorm_sub_tendsto_zero.2
-  simp only [← MemLp.toLp_sub, Lp.eNorm_toLp]
-  have hU : Tendsto (fun s : J ↦ eLpNorm (u s - u t) 2 volume) (𝓝 t) (𝓝 0) := by
-    have ht := h.continuous_toLp.continuousAt (x := t)
-    simpa only [← MemLp.toLp_sub, Lp.eNorm_toLp] using
-      tendsto_iff_eNorm_sub_tendsto_zero.1 ht
-  have hD (j : Fin 2) :
-      Tendsto (fun s : J ↦ eLpNorm (Du s j - Du t j) 2 volume) (𝓝 t) (𝓝 0) := by
-    have ht := (h.continuous_grad_toLp j).continuousAt (x := t)
-    simpa only [← MemLp.toLp_sub, Lp.eNorm_toLp] using
-      tendsto_iff_eNorm_sub_tendsto_zero.1 ht
-  have hSum : Tendsto (fun s : J ↦
-      eLpNorm (u s - u t) 2 volume + eLpNorm (Du s 0 - Du t 0) 2 volume +
-        eLpNorm (Du s 1 - Du t 1) 2 volume) (𝓝 t) (𝓝 0) := by
-    simpa only [zero_add] using (hU.add (hD 0)).add (hD 1)
-  have hMajorant := ENNReal.Tendsto.const_mul (a := C) hSum (Or.inr hC)
-  refine tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds
-    (by simpa only [mul_zero] using hMajorant) (fun _ ↦ zero_le) (fun s ↦ ?_)
-  exact hBound (u s - u t) (Du s - Du t) ((h.h1 s s.property).sub (h.h1 t t.property))
+    Continuous (fun t : J ↦ ((h.h1 t t.property).memLp_of_two_le hq).toLp (u t)) :=
+  continuous_iff_continuousAt.2 fun t ↦ (h.h1 t t.property).tendsto_toLp_of_two_le
+    (fun s : J ↦ h.h1 s s.property) hq h.continuous_toLp.continuousAt
+    (fun j ↦ (h.continuous_grad_toLp j).continuousAt)
+
+/-- The focusing nonlinearity of weak H¹ data belongs to L² for every real p ≥ 3. -/
+theorem IsH1.memLp_nonlinearity {p : ℝ} {u : ℝ² → ℂ} {Du : Fin 2 → ℝ² → ℂ}
+    (hu : IsH1 u Du) (hp : 3 ≤ p) : MemLp (fun x ↦ nonlinearity p (u x)) 2 :=
+  Blowup.memLp_nonlinearity (by linarith) (hu.memLp_of_two_le (by linarith : 2 ≤ 2 * p))
+
+/-- The nonlinear density in the energy is integrable for weak H¹ data. -/
+theorem IsH1.integrable_nonlinear_density {p : ℝ} {u : ℝ² → ℂ} {Du : Fin 2 → ℝ² → ℂ}
+    (hu : IsH1 u Du) (hp : 3 ≤ p) : Integrable (fun x ↦ ‖u x‖ ^ (p + 1)) := by
+  have hp' : 0 < p + 1 := by linarith
+  have h := (hu.memLp_of_two_le (by linarith : 2 ≤ p + 1)).integrable_norm_rpow
+    (by simp [hp']) ENNReal.ofReal_ne_top
+  simpa only [ENNReal.toReal_ofReal hp'.le] using h
+
+/-- The nonlinearity of a weak H¹ solution is continuous into L² on its time domain. -/
+theorem IsNLSSolution.continuous_nonlinearity_toLp
+    {p : ℝ} {J : Set ℝ} {u : ℝ → ℝ² → ℂ} {Du : ℝ → Fin 2 → ℝ² → ℂ}
+    (h : IsNLSSolution p J u Du) (hp : 3 ≤ p) :
+    Continuous (fun t : J ↦ ((h.h1 t t.property).memLp_nonlinearity hp).toLp
+      (fun x ↦ nonlinearity p (u t x))) := by
+  have hq : 2 ≤ 2 * p := by linarith
+  have hp' : 2 < p := by linarith
+  have : Fact (1 ≤ ENNReal.ofReal (2 * p)) :=
+    ⟨ENNReal.one_le_ofReal.mpr (by linarith)⟩
+  exact continuous_toLp_nonlinearity (f := fun t : J ↦ u t) hp'
+    (fun t ↦ (h.h1 t t.property).memLp_of_two_le hq) (h.continuous_toLp_of_two_le hq)
 
 end Blowup

@@ -294,4 +294,64 @@ theorem IsNLSSolution.hasDerivAt_mollify (h : IsNLSSolution p J u Du) (hJ : IsOp
   exact weak_equation_mul_I (F := F) (A := A) (η := η)
     (h.weak_equation_mollify hρ x (η := η) hηs hηc hSupp).2
 
+/-- Spatial derivatives of the mollified solution are jointly continuous. -/
+theorem IsNLSSolution.continuousOn_partialDeriv_mollify (h : IsNLSSolution p J u Du)
+    {ρ : ℝ² → ℝ} (hρ : IsTestFunction ρ) (j : Fin 2) :
+    ContinuousOn (fun z : ℝ × ℝ² ↦ partialDeriv j (mollify ρ (u z.1)) z.2) (J ×ˢ univ) := by
+  apply (h.continuousOn_mollify (hρ.partialDeriv j)).congr
+  intro z hz
+  change partialDeriv j (mollify ρ (u z.1)) z.2 = _
+  rw [partialDeriv_mollify_kernel hρ (h.h1 z.1 hz.1).memL2]
+
+private lemma partialDeriv_mollified_rhs {ρ : ℝ² → ℝ} (hρ : IsTestFunction ρ)
+    {f g : ℝ² → ℂ} (hf : MemLp f 2) (hg : MemLp g 2) (j : Fin 2) (x : ℝ²) :
+    partialDeriv j (fun y ↦ Complex.I * (laplacian (mollify ρ f) y + mollify ρ g y)) x =
+      Complex.I * (laplacian (mollify (partialDeriv j ρ) f) x +
+        mollify (partialDeriv j ρ) g x) := by
+  let L := laplacian (mollify ρ f)
+  let N := mollify ρ g
+  have hL : Differentiable ℝ L := by
+    rw [show L = mollify (laplacian ρ) f from laplacian_mollify_kernel hρ hf]
+    exact (contDiff_mollify hρ.laplacian hf).differentiable (by simp)
+  have hN : Differentiable ℝ N := (contDiff_mollify hρ hg).differentiable (by simp)
+  have hProduct : partialDeriv j (fun y ↦ Complex.I * (L y + N y)) x =
+      Complex.I * (partialDeriv j L x + partialDeriv j N x) := by
+    have hSum : DifferentiableAt ℝ (fun y ↦ L y + N y) x := (hL x).add (hN x)
+    unfold partialDeriv
+    rw [fderiv_const_mul hSum Complex.I, fderiv_fun_add (hL x) (hN x)]
+    simp only [smul_apply, add_apply, smul_eq_mul]
+  rw [hProduct]
+  have hSpace : ContDiff ℝ 3 (mollify ρ f) := (contDiff_mollify hρ hf).of_le (by simp)
+  rw [show L = laplacian (mollify ρ f) from rfl, partialDeriv_laplacian hSpace,
+    partialDeriv_mollify_kernel hρ hf, show N = mollify ρ g from rfl,
+    partialDeriv_mollify_kernel hρ hg]
+
+/-- The first spatial derivatives of the mollified time derivative are jointly continuous. -/
+theorem IsNLSSolution.continuousOn_partialDeriv_mollified_rhs (h : IsNLSSolution p J u Du)
+    {ρ : ℝ² → ℝ} (hρ : IsTestFunction ρ)
+    (hN : ∀ t : J, MemLp (fun x ↦ nonlinearity p (u t x)) 2)
+    (hNc : Continuous (fun t : J ↦ (hN t).toLp (fun x ↦ nonlinearity p (u t x))))
+    (j : Fin 2) :
+    ContinuousOn (fun z : ℝ × ℝ² ↦ partialDeriv j (fun y ↦ Complex.I *
+      (laplacian (mollify ρ (u z.1)) y + mollify ρ (fun w ↦ nonlinearity p (u z.1 w)) y))
+      z.2) (J ×ˢ univ) := by
+  apply (h.continuousOn_mollified_rhs (hρ.partialDeriv j) hN hNc).congr
+  intro z hz
+  exact partialDeriv_mollified_rhs hρ (h.h1 _ hz.1).memL2 (hN ⟨z.1, hz.1⟩) j z.2
+
+/-- A spatial derivative of the mollified solution is differentiable in time, with
+derivative given by the corresponding spatial derivative of the mollified equation. -/
+theorem IsNLSSolution.hasDerivAt_partialDeriv_mollify (h : IsNLSSolution p J u Du)
+    (hJ : IsOpen J) {ρ : ℝ² → ℝ} (hρ : IsTestFunction ρ)
+    (hN : ∀ t : J, MemLp (fun x ↦ nonlinearity p (u t x)) 2)
+    (hNc : Continuous (fun t : J ↦ (hN t).toLp (fun x ↦ nonlinearity p (u t x))))
+    {t : ℝ} (ht : t ∈ J) (j : Fin 2) (x : ℝ²) :
+    HasDerivAt (fun s ↦ partialDeriv j (mollify ρ (u s)) x)
+      (partialDeriv j (fun y ↦ Complex.I *
+        (laplacian (mollify ρ (u t)) y + mollify ρ (fun w ↦ nonlinearity p (u t w)) y)) x) t := by
+  rw [partialDeriv_mollified_rhs hρ (h.h1 t ht).memL2 (hN ⟨t, ht⟩) j x]
+  apply (h.hasDerivAt_mollify hJ (hρ.partialDeriv j) hN hNc ht x).congr_of_eventuallyEq
+  filter_upwards [hJ.mem_nhds ht] with s hs
+  rw [partialDeriv_mollify_kernel hρ (h.h1 s hs).memL2]
+
 end Blowup
