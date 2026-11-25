@@ -43,3 +43,17 @@ available at commit `3183ab12b0877a270f4210db571b2ff0d5333196`.
 
 The `main` ruleset requires a pull request, an up-to-date branch, and the
 **Lean kernel and axioms** status check from GitHub Actions.
+
+## Parallel proof work
+
+Start a Codex session in this trusted checkout and ask it to coordinate a
+proof round with subagents. For example, “Run the first proof round from
+`PROGRESS.md` with separate worktrees. Review each branch before opening its
+PR.” [AGENTS.md](AGENTS.md) defines the coordinator's review and publication
+workflow. [PROGRESS.md](PROGRESS.md#first-proof-round) records the first
+independent tasks.
+
+Sign in to Claude Code on the coordinator's machine for the independent proof
+review. Claude Opus reviews each committed candidate after the coordinator and
+local Lean gate pass, and before the coordinator opens its PR. GitHub Actions
+runs the required Lean check with its existing configuration.

@@ -22,6 +22,17 @@ commit `3183ab12b0877a270f4210db571b2ff0d5333196`.
 | `Calculus.lean`, `ScaleSelection.lean`, `Section5.lean` | Calculus, scale selection, and scalar estimates |
 | `ExteriorEstimate.lean`, `LocalizedVirial.lean` | Definitions used by the exterior and virial estimates |
 
+## First proof round
+
+Each task can start from the checked foundation. The coordinator assigns the
+worktrees and reviews the branches according to [AGENTS.md](AGENTS.md).
+
+| Task | Owned file | First deliverable |
+|---|---|---|
+| `localized-virial-initial-value` | `BlowupFormalization/LocalizedVirial.lean` | Prove the value bound in (4.7) using `virialWeight_le_sq`, `virialWeight_eq_zero`, and `compactMoment`. |
+| `h1-ae-invariance` | `BlowupFormalization/H1Data.lean` | Prove that `SameH1Data` preserves `IsH1`, mass, squared gradient norm, and energy. |
+| `exterior-exponents` | `BlowupFormalization/ExteriorExponents.lean` | Prove the identities and exponent bounds in (3.1)–(3.2) for `p > 5`, including Schrödinger admissibility and the Hölder relation for the point source. |
+
 ## Proof obligations
 
 - Prove the H¹ solution theory used by the paper: local existence and
