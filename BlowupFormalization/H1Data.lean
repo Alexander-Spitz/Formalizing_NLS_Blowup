@@ -47,3 +47,32 @@ theorem energy_eq (h : SameH1Data u v Du Dv) (p : ℝ) : energy p u Du = energy 
   simp only [energy, h.gradNormSq_eq, hp]
 
 end Blowup.SameH1Data
+
+namespace Blowup
+
+/-- The difference of two weak H¹ functions has the difference of their weak gradients. -/
+theorem IsH1.sub {u v : ℝ² → ℂ} {Du Dv : Fin 2 → ℝ² → ℂ}
+    (hu : IsH1 u Du) (hv : IsH1 v Dv) : IsH1 (u - v) (Du - Dv) where
+  memL2 := hu.memL2.sub hv.memL2
+  memL2_partial j := (hu.memL2_partial j).sub (hv.memL2_partial j)
+  integration_by_parts φ hφ j := by
+    let e := EuclideanSpace.single j (1 : ℝ)
+    have hTest : MemLp (fun x ↦ (φ x : ℂ)) 2 :=
+      (Complex.continuous_ofReal.comp hφ.1.continuous).memLp_of_hasCompactSupport
+        (hφ.2.comp_left Complex.ofReal_zero)
+    have hPartial : MemLp (fun x ↦ ((partialDeriv j φ x : ℝ) : ℂ)) 2 :=
+      (Complex.continuous_ofReal.comp
+        ((hφ.1.continuous_fderiv (by simp)).clm_apply continuous_const)).memLp_of_hasCompactSupport
+          ((hφ.2.fderiv_apply ℝ e).comp_left Complex.ofReal_zero)
+    simp only [Pi.sub_apply, sub_mul]
+    rw [integral_sub
+      (f := fun x ↦ u x * ((partialDeriv j φ x : ℝ) : ℂ))
+      (g := fun x ↦ v x * ((partialDeriv j φ x : ℝ) : ℂ))
+      (hu.memL2.integrable_mul hPartial) (hv.memL2.integrable_mul hPartial)]
+    rw [integral_sub
+      (f := fun x ↦ Du j x * (φ x : ℂ)) (g := fun x ↦ Dv j x * (φ x : ℂ))
+      ((hu.memL2_partial j).integrable_mul hTest) ((hv.memL2_partial j).integrable_mul hTest),
+      hu.integration_by_parts φ hφ j, hv.integration_by_parts φ hφ j]
+    abel
+
+end Blowup

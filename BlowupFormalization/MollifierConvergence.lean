@@ -7,6 +7,37 @@ open scoped Convolution Pointwise
 
 namespace Blowup
 
+/-- Outer radius for the normalized shrinking spatial mollifiers. -/
+noncomputable def mollifierRadius (n : ℕ) : ℝ := 1 / ((n : ℝ) + 1)
+
+private noncomputable def mollifierBump (n : ℕ) : ContDiffBump (0 : ℝ²) where
+  rIn := mollifierRadius n / 2
+  rOut := mollifierRadius n
+  rIn_pos := by unfold mollifierRadius; positivity
+  rIn_lt_rOut := by
+    have h : 0 < mollifierRadius n := by unfold mollifierRadius; positivity
+    linarith
+
+/-- The normalized smooth bump with outer radius `1 / (n + 1)`. -/
+noncomputable def normalizedMollifier (n : ℕ) : ℝ² → ℝ := (mollifierBump n).normed volume
+
+theorem normalizedMollifier_isTestFunction (n : ℕ) : IsTestFunction (normalizedMollifier n) :=
+  ⟨(mollifierBump n).contDiff_normed, (mollifierBump n).hasCompactSupport_normed⟩
+
+theorem normalizedMollifier_nonneg (n : ℕ) (x : ℝ²) : 0 ≤ normalizedMollifier n x :=
+  (mollifierBump n).nonneg_normed x
+
+theorem normalizedMollifier_integral (n : ℕ) : ∫ x, normalizedMollifier n x = 1 :=
+  (mollifierBump n).integral_normed
+
+theorem normalizedMollifier_support (n : ℕ) :
+    Function.support (normalizedMollifier n) ⊆ Metric.closedBall 0 (mollifierRadius n) := by
+  rw [normalizedMollifier, (mollifierBump n).support_normed_eq]
+  exact Metric.ball_subset_closedBall
+
+theorem tendsto_mollifierRadius : Tendsto mollifierRadius atTop (𝓝 0) :=
+  tendsto_one_div_add_atTop_nhds_zero_nat
+
 /-- Mollification distributes over differences of L² functions. -/
 theorem mollify_sub {ρ : ℝ² → ℝ} {f g : ℝ² → ℂ} (hρ : IsTestFunction ρ)
     (hf : MemLp f 2) (hg : MemLp g 2) :

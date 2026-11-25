@@ -7,15 +7,36 @@ open scoped ENNReal
 
 namespace Blowup
 
-private lemma testFunction_memLp_top_complex {A : ℝ² → ℝ} (hA : IsTestFunction A) :
+/-- A real test function is an essentially bounded complex coefficient. -/
+theorem testFunction_memLp_top_complex {A : ℝ² → ℝ} (hA : IsTestFunction A) :
     MemLp (fun x ↦ (A x : ℂ)) ∞ :=
   (Complex.continuous_ofReal.comp hA.1.continuous).memLp_top_of_hasCompactSupport
     (hA.2.comp_left Complex.ofReal_zero) volume
 
-private lemma integrable_weighted_pairing {a f g : ℝ² → ℂ}
+/-- The product of two L² functions with an L∞ coefficient is integrable. -/
+theorem integrable_weighted_pairing {a f g : ℝ² → ℂ}
     (ha : MemLp a ∞) (hf : MemLp f 2) (hg : MemLp g 2) :
     Integrable (fun x ↦ starRingEnd ℂ (f x) * (a x * g x)) :=
   hf.star.integrable_mul (ha.mul (r := 2) hg)
+
+/-- A weighted spatial pairing is the L² inner product after Hölder multiplication
+by the bounded coefficient. -/
+theorem weighted_pairing_eq_inner {a f g : ℝ² → ℂ}
+    (ha : MemLp a ∞) (hf : MemLp f 2) (hg : MemLp g 2) :
+    inner ℂ (hf.toLp f)
+      ((ContinuousLinearMap.mul ℂ ℂ).holderL (volume : Measure ℝ²) ∞ 2 2
+        (ha.toLp a) (hg.toLp g)) =
+        ∫ x, starRingEnd ℂ (f x) * (a x * g x) := by
+  let A := ha.toLp a
+  let M := (ContinuousLinearMap.mul ℂ ℂ).holderL (volume : Measure ℝ²) ∞ 2 2 A
+  rw [L2.inner_def]
+  apply integral_congr_ae
+  filter_upwards [hf.coeFn_toLp, ha.coeFn_toLp, hg.coeFn_toLp,
+    (ContinuousLinearMap.mul ℂ ℂ).coeFn_holder (r := 2) A (hg.toLp g)] with x hfx hax hgx hM
+  change inner ℂ (hf.toLp f x) ((M (hg.toLp g)) x) = starRingEnd ℂ (f x) * (a x * g x)
+  change (M (hg.toLp g)) x = A x * (hg.toLp g) x at hM
+  change A x = a x at hax
+  rw [RCLike.inner_apply', hfx, hM, hax, hgx]
 
 private lemma continuous_weighted_pairing {X : Type*} [TopologicalSpace X]
     {a : ℝ² → ℂ} (ha : MemLp a ∞) {f g : X → ℝ² → ℂ}
@@ -23,21 +44,9 @@ private lemma continuous_weighted_pairing {X : Type*} [TopologicalSpace X]
     (hf_cont : Continuous (fun t ↦ (hf t).toLp (f t)))
     (hg_cont : Continuous (fun t ↦ (hg t).toLp (g t))) :
     Continuous (fun t ↦ ∫ x, starRingEnd ℂ (f t x) * (a x * g t x)) := by
-  -- Fixing an L∞ coefficient in Hölder multiplication gives a continuous map on L².
-  let A := ha.toLp a
-  let M := (ContinuousLinearMap.mul ℂ ℂ).holderL (volume : Measure ℝ²) ∞ 2 2 A
-  have hc := hf_cont.inner (𝕜 := ℂ) (M.continuous.comp hg_cont)
-  apply hc.congr
-  intro t
-  rw [L2.inner_def]
-  apply integral_congr_ae
-  filter_upwards [(hf t).coeFn_toLp, ha.coeFn_toLp, (hg t).coeFn_toLp,
-    (ContinuousLinearMap.mul ℂ ℂ).coeFn_holder (r := 2) A ((hg t).toLp (g t))] with x hfx hax hgx hM
-  change inner ℂ ((hf t).toLp (f t) x) ((M ((hg t).toLp (g t))) x) =
-    starRingEnd ℂ (f t x) * (a x * g t x)
-  change (M ((hg t).toLp (g t))) x = A x * ((hg t).toLp (g t)) x at hM
-  change A x = a x at hax
-  rw [RCLike.inner_apply', hfx, hM, hax, hgx]
+  let M := (ContinuousLinearMap.mul ℂ ℂ).holderL (volume : Measure ℝ²) ∞ 2 2 (ha.toLp a)
+  exact (hf_cont.inner (𝕜 := ℂ) (M.continuous.comp hg_cont)).congr
+    (fun t ↦ weighted_pairing_eq_inner ha (hf t) (hg t))
 
 variable {p : ℝ} {J : Set ℝ} {u : ℝ → ℝ² → ℂ} {Du : ℝ → Fin 2 → ℝ² → ℂ}
 

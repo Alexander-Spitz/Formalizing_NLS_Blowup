@@ -62,13 +62,32 @@ These results are merged on `main`.
 | `VirialContinuity.lean` | The localized variance and first virial expression are continuous on the time domain of a weak solution. | [#13](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/13) |
 | `Mollification.lean` | Spatial mollification maps L² data into smooth L² functions, commutes with the weak partial derivatives, and bounds the mass by the squared L¹ norm of the kernel times the input mass. | [#14](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/14) |
 
+## Fifth proof round
+
+These results are merged on `main`.
+
+| Module | Result | PR |
+|---|---|---|
+| `SmoothVirial.lean` | The forced first identity needs only joint C¹ regularity and a C² spatial slice. Locally uniform convergence of the first virial terms and errors passes the derivative identity to the limit. | [#15](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/15) |
+| `MollifierConvergence.lean` | Normalized shrinking kernels approximate weak H¹ functions and their weak partial derivatives in L². | [#16](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/16) |
+| `MollifiedEquation.lean` | The spatially mollified weak equation holds at each spatial point against every temporal test in the interior of the time domain. | [#17](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/17) |
+
+## First localized virial identity for weak solutions
+
+`IsNLSSolution.hasDerivAt_localizedVariance` in
+[`WeakFirstVirial.lean`](BlowupFormalization/WeakFirstVirial.lean) proves (4.4)
+for every real `p ≥ 3`, every smooth compactly supported real weight, and
+every interior time of a weak H¹ solution. The proof uses the weak H¹ Sobolev
+embedding, continuity of the nonlinearity in L², and passage to the limit in
+the forced identity for spatially mollified solutions.
+
 ## Proof obligations
 
 - Prove the H¹ solution theory used by the paper: local existence and
   uniqueness, radiality preservation, conservation, continuation, and the
   Gagliardo–Nirenberg inequality for the chosen H¹ representation.
-- Prove the classical and localized virial identities for weak H¹ solutions
-  to apply the bounds in (4.6)–(4.7) to their time derivatives.
+- Prove the second localized virial identity for weak H¹ solutions to apply
+  the acceleration bound in (4.6), and the classical virial identities as needed.
 - Formalize the localized virial arguments for `3 ≤ p < 5` and for `p = 5`.
 - Prove the required dispersive estimates (including the cited prerequisites),
   Lemma 3.1, and Proposition 3.2.
