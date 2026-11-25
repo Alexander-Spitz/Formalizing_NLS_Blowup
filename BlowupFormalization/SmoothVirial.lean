@@ -13,25 +13,32 @@ private lemma hasDerivAt_time_slice {E : Type*} [NormedAddCommGroup E] [NormedSp
   have hs := (hasDerivAt_id' t).prodMk (hasDerivAt_const t x)
   exact ((hf.differentiable (by simp) (t, x)).hasFDerivAt).comp_hasDerivAt t hs
 
-private lemma integrable_hasDerivAt_integral_mul_of_contDiff {A : ℝ² → ℝ} (hA : Continuous A)
-    (hAc : HasCompactSupport A) {f : ℝ → ℝ² → ℝ}
-    (hf : ContDiff ℝ 1 (Function.uncurry f)) (t : ℝ) :
-    Integrable (fun x ↦ A x * deriv (fun s ↦ f s x) t) ∧
-      HasDerivAt (fun s ↦ ∫ x, A x * f s x) (∫ x, A x * deriv (fun s ↦ f s x) t) t := by
+set_option maxHeartbeats 400000 in
+-- The dominated differentiation proof with the local time interval exceeds the default budget.
+private lemma integrable_hasDerivAt_integral_mul {J : Set ℝ} (hJ : IsOpen J)
+    {t : ℝ} (ht : t ∈ J) {A : ℝ² → ℝ} (hA : Continuous A) (hAc : HasCompactSupport A)
+    {f f' : ℝ → ℝ² → ℝ}
+    (hf : ContinuousOn (Function.uncurry f) (J ×ˢ Set.univ))
+    (hf' : ContinuousOn (Function.uncurry f') (J ×ˢ Set.univ))
+    (hDeriv : ∀ s ∈ J, ∀ x, HasDerivAt (fun r ↦ f r x) (f' s x) s) :
+    Integrable (fun x ↦ A x * f' t x) ∧
+      HasDerivAt (fun s ↦ ∫ x, A x * f s x) (∫ x, A x * f' t x) t := by
   let F (s : ℝ) (x : ℝ²) := A x * f s x
-  let F' (s : ℝ) (x : ℝ²) := A x * fderiv ℝ (Function.uncurry f) (s, x) (1, 0)
-  have hF (s : ℝ) : Continuous (F s) :=
-    hA.mul (hf.continuous.comp (continuous_const.prodMk continuous_id))
-  have hF' : Continuous (Function.uncurry F') :=
-    (hA.comp continuous_snd).mul ((hf.continuous_fderiv (by simp)).clm_apply continuous_const)
-  have hFI : Integrable (F t) := (hF t).integrable_of_hasCompactSupport hAc.mul_right
+  let F' (s : ℝ) (x : ℝ²) := A x * f' s x
+  have hF (s : ℝ) (hs : s ∈ J) : Continuous (F s) :=
+    hA.mul (hf.comp_continuous (continuous_const.prodMk continuous_id)
+      (fun _ ↦ ⟨hs, mem_univ _⟩))
+  have hF' : ContinuousOn (Function.uncurry F') (J ×ˢ Set.univ) :=
+    (hA.comp continuous_snd).continuousOn.mul hf'
+  have hFI : Integrable (F t) := (hF t ht).integrable_of_hasCompactSupport hAc.mul_right
   have hF'M : AEStronglyMeasurable (F' t) :=
-    (hF'.comp (continuous_const.prodMk continuous_id)).aestronglyMeasurable
-  let J := Icc (t - 1) (t + 1)
-  have hJ : J ∈ 𝓝 t := Icc_mem_nhds (by linarith) (by linarith)
+    (hF'.comp_continuous (continuous_const.prodMk continuous_id)
+      (fun _ ↦ ⟨ht, mem_univ _⟩)).aestronglyMeasurable
+  obtain ⟨a, b, _, hI, hIJ⟩ := exists_Icc_mem_subset_of_mem_nhds (hJ.mem_nhds ht)
   obtain ⟨C, hC⟩ := (isCompact_Icc.prod hAc).exists_bound_of_continuousOn
-    (f := Function.uncurry F') hF'.continuousOn
-  have hBound : ∀ᵐ x ∂volume, ∀ s ∈ J, ‖F' s x‖ ≤ (tsupport A).indicator (fun _ ↦ C) x :=
+    (f := Function.uncurry F') (hF'.mono (prod_mono hIJ (subset_univ _)))
+  have hBound : ∀ᵐ x ∂volume, ∀ s ∈ Icc a b,
+      ‖F' s x‖ ≤ (tsupport A).indicator (fun _ ↦ C) x :=
     ae_of_all _ fun x s hs ↦ by
       by_cases hx : x ∈ tsupport A
       · rw [indicator_of_mem hx]
@@ -44,20 +51,23 @@ private lemma integrable_hasDerivAt_integral_mul_of_contDiff {A : ℝ² → ℝ}
   have hCI : Integrable ((tsupport A).indicator (fun _ ↦ C)) :=
     (integrable_indicator_iff (isClosed_tsupport A).measurableSet).2
       (integrableOn_const hAc.measure_lt_top.ne)
-  have hDiff (s : ℝ) (x : ℝ²) : HasDerivAt (fun r ↦ F r x) (F' s x) s :=
-    (hasDerivAt_time_slice hf s x).const_mul (A x)
-  have h := hasDerivAt_integral_of_dominated_loc_of_deriv_le hJ
-    (Eventually.of_forall fun s ↦ (hF s).aestronglyMeasurable) hFI hF'M hBound hCI
-    (ae_of_all _ fun x s _ ↦ hDiff s x)
-  simpa only [F, F', ← (hasDerivAt_time_slice hf t _).deriv] using h
+  have hFM : ∀ᶠ s in 𝓝 t, AEStronglyMeasurable (F s) :=
+    Filter.mem_of_superset (hJ.mem_nhds ht) fun s hs ↦ (hF s hs).aestronglyMeasurable
+  exact hasDerivAt_integral_of_dominated_loc_of_deriv_le hI hFM hFI hF'M hBound hCI
+    (ae_of_all _ fun x s hs ↦ (hDeriv s (hIJ hs) x).const_mul (A x))
 
 /-- A jointly continuously differentiable integrand can be differentiated in time against a
 fixed continuous, compactly supported spatial weight. -/
 theorem hasDerivAt_integral_mul_of_contDiff {A : ℝ² → ℝ} (hA : Continuous A)
     (hAc : HasCompactSupport A) {f : ℝ → ℝ² → ℝ}
     (hf : ContDiff ℝ 1 (Function.uncurry f)) (t : ℝ) :
-    HasDerivAt (fun s ↦ ∫ x, A x * f s x) (∫ x, A x * deriv (fun s ↦ f s x) t) t :=
-  (integrable_hasDerivAt_integral_mul_of_contDiff hA hAc hf t).2
+    HasDerivAt (fun s ↦ ∫ x, A x * f s x) (∫ x, A x * deriv (fun s ↦ f s x) t) t := by
+  let f' (s : ℝ) (x : ℝ²) := fderiv ℝ (Function.uncurry f) (s, x) (1, 0)
+  have hf' : Continuous (Function.uncurry f') :=
+    (hf.continuous_fderiv (by simp)).clm_apply continuous_const
+  have h := integrable_hasDerivAt_integral_mul isOpen_univ (mem_univ t) hA hAc
+    hf.continuous.continuousOn hf'.continuousOn (fun s _ x ↦ hasDerivAt_time_slice hf s x)
+  simpa only [f', ← (hasDerivAt_time_slice hf t _).deriv] using h.2
 
 private lemma contDiff_partialDeriv {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     {f : ℝ² → E} {m n : ℕ∞ω} (hf : ContDiff ℝ n f) (hmn : m + 1 ≤ n) (j : Fin 2) :
@@ -155,54 +165,48 @@ theorem integral_im_weighted_laplacian_eq_neg {A : ℝ² → ℝ} (hA : IsTestFu
     integral_im_weighted_partialDeriv_eq_neg hA hu 0,
     integral_im_weighted_partialDeriv_eq_neg hA hu 1, neg_add]
 
-/-- The forced first localized virial identity for a jointly C¹ function with a C² spatial
-slice at the time of differentiation. The weighted residual contributes with a positive sign. -/
-theorem hasDerivAt_localizedVariance_of_forced_nls
-    {u : ℝ → ℝ² → ℂ} (hu : ContDiff ℝ 1 (Function.uncurry u)) {t : ℝ}
+/-- The first localized virial identity for the forced linear Schrödinger equation.
+The time derivative is continuous on the open time set, and the spatial slice is C²
+at the time of differentiation. -/
+theorem hasDerivAt_localizedVariance_of_linear_forced
+    {J : Set ℝ} (hJ : IsOpen J) {t : ℝ} (ht : t ∈ J) {u ut : ℝ → ℝ² → ℂ}
+    (hu : ContinuousOn (Function.uncurry u) (J ×ˢ Set.univ))
+    (hut : ContinuousOn (Function.uncurry ut) (J ×ˢ Set.univ))
+    (hDeriv : ∀ s ∈ J, ∀ x, HasDerivAt (fun r ↦ u r x) (ut s x) s)
     (hSpace : ContDiff ℝ 2 (u t)) {A : ℝ² → ℝ} (hA : IsTestFunction A)
-    {p : ℝ} {F : ℝ² → ℂ}
-    (hNLS : ∀ x, Complex.I * deriv (fun s ↦ u s x) t +
-      laplacian (u t) x + nonlinearity p (u t x) = F x) :
+    {F : ℝ² → ℂ} (hEq : ∀ x, Complex.I * ut t x + laplacian (u t) x = F x) :
     HasDerivAt (fun s ↦ ∫ x, A x * ‖u s x‖ ^ 2)
       (virialFirstDeriv A (u t) (fun j ↦ partialDeriv j (u t)) +
         2 * (∫ x, ((A x : ℂ) * starRingEnd ℂ (u t x) * F x).im)) t := by
   let K (x : ℝ²) : ℂ := (A x : ℂ) * starRingEnd ℂ (u t x)
   let L (x : ℝ²) : ℝ := (K x * laplacian (u t) x).im
   let R (x : ℝ²) : ℝ := (K x * F x).im
-  have hNorm : ContDiff ℝ 1 (Function.uncurry (fun s x ↦ ‖u s x‖ ^ 2)) := hu.norm_sq ℂ
-  obtain ⟨hDensity_int, hVar⟩ :=
-    integrable_hasDerivAt_integral_mul_of_contDiff hA.1.continuous hA.2 hNorm t
-  have hDensity (x : ℝ²) :
-      A x * deriv (fun s ↦ ‖u s x‖ ^ 2) t = 2 * (R x - L x) := by
-    have hd := hasDerivAt_time_slice hu t x
-    have hNormDeriv : deriv (fun s ↦ ‖u s x‖ ^ 2) t =
-        2 * (deriv (fun s ↦ u s x) t * starRingEnd ℂ (u t x)).re := by
-      simpa only [Complex.inner, ← hd.deriv] using hd.norm_sq.deriv
-    have hTime : (K x * (Complex.I * deriv (fun s ↦ u s x) t)).im =
-        A x * (deriv (fun s ↦ u s x) t * starRingEnd ℂ (u t x)).re := by
+  let densityDeriv (s : ℝ) (x : ℝ²) := 2 * (ut s x * starRingEnd ℂ (u s x)).re
+  have hNorm : ContinuousOn (Function.uncurry (fun s x ↦ ‖u s x‖ ^ 2)) (J ×ˢ Set.univ) :=
+    hu.norm.pow 2
+  have hConj := Complex.continuous_conj.comp_continuousOn hu
+  have hDensityCont : ContinuousOn (Function.uncurry densityDeriv) (J ×ˢ Set.univ) :=
+    continuousOn_const.mul (Complex.continuous_re.comp_continuousOn (hut.mul hConj))
+  have hDensityDeriv (s : ℝ) (hs : s ∈ J) (x : ℝ²) :
+      HasDerivAt (fun r ↦ ‖u r x‖ ^ 2) (densityDeriv s x) s := by
+    simpa only [densityDeriv, Complex.inner] using (hDeriv s hs x).norm_sq
+  obtain ⟨hDensity_int, hVar⟩ := integrable_hasDerivAt_integral_mul hJ ht
+    hA.1.continuous hA.2 hNorm hDensityCont hDensityDeriv
+  have hDensity (x : ℝ²) : A x * densityDeriv t x = 2 * (R x - L x) := by
+    have hTime : (K x * (Complex.I * ut t x)).im =
+        A x * (ut t x * starRingEnd ℂ (u t x)).re := by
       calc
-        _ = (((A x : ℂ) * (deriv (fun s ↦ u s x) t * starRingEnd ℂ (u t x))) *
-            Complex.I).im := by
+        _ = (((A x : ℂ) * (ut t x * starRingEnd ℂ (u t x))) * Complex.I).im := by
           unfold K
           congr 1
           ring
         _ = _ := by rw [Complex.mul_I_im, Complex.re_ofReal_mul]
-    have hNonlinear : (K x * nonlinearity p (u t x)).im = 0 := by
-      calc
-        _ = (((A x : ℂ) * (‖u t x‖ ^ (p - 1) : ℝ)) *
-            (u t x * starRingEnd ℂ (u t x))).im := by
-          unfold K nonlinearity
-          congr 1
-          ring
-        _ = 0 := by rw [Complex.mul_conj, ← Complex.ofReal_mul, ← Complex.ofReal_mul,
-              Complex.ofReal_im]
-    have hEq := congrArg (fun z : ℂ ↦ (K x * z).im) (hNLS x)
-    change (K x * (Complex.I * deriv (fun s ↦ u s x) t +
-      laplacian (u t) x + nonlinearity p (u t x))).im = R x at hEq
-    simp only [mul_add, Complex.add_im, hTime, hNonlinear, add_zero] at hEq
-    change A x * (deriv (fun s ↦ u s x) t * starRingEnd ℂ (u t x)).re + L x = R x at hEq
-    rw [hNormDeriv]
-    linear_combination 2 * hEq
+    have him := congrArg (fun z : ℂ ↦ (K x * z).im) (hEq x)
+    change (K x * (Complex.I * ut t x + laplacian (u t) x)).im = R x at him
+    simp only [mul_add, Complex.add_im, hTime] at him
+    change A x * (ut t x * starRingEnd ℂ (u t x)).re + L x = R x at him
+    unfold densityDeriv
+    linear_combination 2 * him
   have hLap : Continuous (laplacian (u t)) := by
     have hPartial (j : Fin 2) : Continuous (partialDeriv j (partialDeriv j (u t))) :=
       (contDiff_partialDeriv hSpace (m := 1) (by norm_num) j
@@ -215,12 +219,12 @@ theorem hasDerivAt_localizedVariance_of_forced_nls
     (hA.2.comp_left Complex.ofReal_zero : HasCompactSupport (fun x ↦ (A x : ℂ))).mul_right
   have hLI : Integrable L := ((hK.mul hLap).integrable_of_hasCompactSupport hKc.mul_right).im
   have hRI : Integrable R := by
-    have hR : R = fun x ↦ (1 / 2 : ℝ) * (A x * deriv (fun s ↦ ‖u s x‖ ^ 2) t) + L x := by
+    have hR : R = fun x ↦ (1 / 2 : ℝ) * (A x * densityDeriv t x) + L x := by
       funext x
       linarith [hDensity x]
     rw [hR]
     exact (hDensity_int.const_mul _).add hLI
-  have hValue : (∫ x, A x * deriv (fun s ↦ ‖u s x‖ ^ 2) t) =
+  have hValue : (∫ x, A x * densityDeriv t x) =
       virialFirstDeriv A (u t) (fun j ↦ partialDeriv j (u t)) + 2 * (∫ x, R x) := by
     have hParts := integral_im_weighted_laplacian_eq_neg hA hSpace
     change (∫ x, L x) = _ at hParts
@@ -228,6 +232,29 @@ theorem hasDerivAt_localizedVariance_of_forced_nls
     rw [integral_const_mul, integral_sub hRI hLI, hParts, sub_neg_eq_add, mul_add, add_comm]
     rfl
   exact hValue ▸ hVar
+
+/-- The forced first localized virial identity for a jointly C¹ function with a C² spatial
+slice at the time of differentiation. The weighted residual contributes with a positive sign. -/
+theorem hasDerivAt_localizedVariance_of_forced_nls
+    {u : ℝ → ℝ² → ℂ} (hu : ContDiff ℝ 1 (Function.uncurry u)) {t : ℝ}
+    (hSpace : ContDiff ℝ 2 (u t)) {A : ℝ² → ℝ} (hA : IsTestFunction A)
+    {p : ℝ} {F : ℝ² → ℂ}
+    (hNLS : ∀ x, Complex.I * deriv (fun s ↦ u s x) t +
+      laplacian (u t) x + nonlinearity p (u t x) = F x) :
+    HasDerivAt (fun s ↦ ∫ x, A x * ‖u s x‖ ^ 2)
+      (virialFirstDeriv A (u t) (fun j ↦ partialDeriv j (u t)) +
+        2 * (∫ x, ((A x : ℂ) * starRingEnd ℂ (u t x) * F x).im)) t := by
+  let ut (s : ℝ) (x : ℝ²) := fderiv ℝ (Function.uncurry u) (s, x) (1, 0)
+  have hut : Continuous (Function.uncurry ut) :=
+    (hu.continuous_fderiv (by simp)).clm_apply continuous_const
+  have hEq (x : ℝ²) : Complex.I * ut t x + laplacian (u t) x = F x - nonlinearity p (u t x) := by
+    have hdt : deriv (fun s ↦ u s x) t = ut t x := (hasDerivAt_time_slice hu t x).deriv
+    rw [eq_sub_iff_add_eq, ← hdt]
+    exact hNLS x
+  have h := hasDerivAt_localizedVariance_of_linear_forced isOpen_univ (mem_univ t)
+    hu.continuous.continuousOn hut.continuousOn
+    (fun s _ x ↦ hasDerivAt_time_slice hu s x) hSpace hA hEq
+  simpa only [mul_sub, Complex.sub_im, im_weighted_nonlinearity_eq_zero, sub_zero] using h
 
 /-- The first localized virial identity with a residual for a jointly C² function. -/
 theorem hasDerivAt_localizedVariance_of_forced_smooth_nls

@@ -12,6 +12,15 @@ noncomputable def virialFirstDeriv (A : ℝ² → ℝ) (u : ℝ² → ℂ) (Du :
   2 * ∫ x, (starRingEnd ℂ (u x) *
     (((partialDeriv 0 A x : ℝ) : ℂ) * Du 0 x + ((partialDeriv 1 A x : ℝ) : ℂ) * Du 1 x)).im
 
+/-- The nonlinearity paired with the conjugate field and a real weight is real. -/
+theorem im_weighted_nonlinearity_eq_zero (a p : ℝ) (z : ℂ) :
+    ((a : ℂ) * starRingEnd ℂ z * nonlinearity p z).im = 0 := by
+  unfold nonlinearity
+  have h : (a : ℂ) * starRingEnd ℂ z * (((‖z‖ ^ (p - 1) : ℝ) : ℂ) * z) =
+      ((a : ℂ) * ((‖z‖ ^ (p - 1) : ℝ) : ℂ)) * (starRingEnd ℂ z * z) := by ring
+  rw [h, Complex.conj_mul', ← Complex.ofReal_pow, ← Complex.ofReal_mul,
+    ← Complex.ofReal_mul, Complex.ofReal_im]
+
 /-- Right-hand side of (4.5), written for a general (not necessarily radial) weight:
 `4 Re ∫ Σⱼₖ ∂ⱼ∂ₖA ∂ⱼu ∂ₖū − 2(p−1)/(p+1) ∫ ΔA |u|^{p+1} − ∫ Δ²A |u|²`.
 For radial `A` and `u` the first term is the paper's `4 ∫ A'' |u_r|²`. -/
