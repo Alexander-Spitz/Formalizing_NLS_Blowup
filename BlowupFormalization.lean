@@ -1,4 +1,7 @@
+import BlowupFormalization.BlowupAssembly
 import BlowupFormalization.Calculus
+import BlowupFormalization.CubicVirial
+import BlowupFormalization.CubicVirialWeight
 import BlowupFormalization.Defs
 import BlowupFormalization.H1Data
 import BlowupFormalization.H1Sobolev
@@ -9,6 +12,7 @@ import BlowupFormalization.LinearVirialAcceleration
 import BlowupFormalization.LocalizedVirial
 import BlowupFormalization.LocalizedVirialBound
 import BlowupFormalization.MassConservation
+import BlowupFormalization.MaximalLifespan
 import BlowupFormalization.MollifiedEquation
 import BlowupFormalization.MollifiedTimeRegularity
 import BlowupFormalization.Mollification

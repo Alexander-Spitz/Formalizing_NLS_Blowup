@@ -1,3 +1,4 @@
+import BlowupFormalization.CubicVirial
 import BlowupFormalization.ExteriorEstimate
 import BlowupFormalization.GagliardoNirenberg
 import BlowupFormalization.MassConservation
@@ -86,16 +87,14 @@ private theorem gradNormSq_nonneg (D : Fin 2 → ℝ² → ℂ) : 0 ≤ gradNorm
   integral_nonneg (fun _ ↦ add_nonneg (sq_nonneg _) (sq_nonneg _))
 
 private theorem variance_le_quadratic (h : IsNLSSolution p J u Du) (hp : 3 ≤ p)
-    {Q T a : ℝ} (hQ : 0 < Q) (hT : 0 ≤ T) (hTime : Icc 0 T ⊆ interior J)
-    (hAcc : ∀ t ∈ Icc 0 T, virialSecondDeriv p (virialWeight Q) (u t) (Du t) ≤ -2 * a) :
-    (∫ x, virialWeight Q x * ‖u T x‖ ^ 2) ≤
-      (∫ x, virialWeight Q x * ‖u 0 x‖ ^ 2) +
-        T * |virialFirstDeriv (virialWeight Q) (u 0) (Du 0)| - a * T ^ 2 := by
-  let A := virialWeight Q
+    {A : ℝ² → ℝ} (hA : IsTestFunction A)
+    {T a : ℝ} (hT : 0 ≤ T) (hTime : Icc 0 T ⊆ interior J)
+    (hAcc : ∀ t ∈ Icc 0 T, virialSecondDeriv p A (u t) (Du t) ≤ -2 * a) :
+    (∫ x, A x * ‖u T x‖ ^ 2) ≤
+      (∫ x, A x * ‖u 0 x‖ ^ 2) + T * |virialFirstDeriv A (u 0) (Du 0)| - a * T ^ 2 := by
   let V (s : ℝ) := ∫ x, A x * ‖u s x‖ ^ 2
   let C (s : ℝ) := virialFirstDeriv A (u s) (Du s)
   let B (s : ℝ) := virialSecondDeriv p A (u s) (Du s)
-  have hA := virialWeight_isTestFunction hQ
   have hV (s : ℝ) (hs : s ∈ Icc 0 T) : HasDerivAt V (C s) s :=
     h.hasDerivAt_localizedVariance hp hA (hTime hs)
   have hC (s : ℝ) (hs : s ∈ Icc 0 T) : HasDerivAt C (B s) s :=
@@ -218,7 +217,7 @@ theorem IsNLSSolution.false_of_finite_initial_variance
   have hC0 : |virialFirstDeriv (virialWeight Q) (u 0) (Du 0)| ≤ c :=
     (eq_4_7_deriv hu₀ hQ').trans
       (mul_le_mul_of_nonneg_left (Real.sqrt_le_sqrt hV0) (by positivity))
-  have hV := variance_le_quadratic h hp hQ' hT.le hSegment hAcc
+  have hV := variance_le_quadratic h hp (virialWeight_isTestFunction hQ') hT.le hSegment hAcc
   have hNonneg : 0 ≤ ∫ x, virialWeight Q x * ‖u T x‖ ^ 2 :=
     integral_nonneg (fun x ↦ mul_nonneg (virialWeight_nonneg Q x) (sq_nonneg _))
   linarith only [hNonneg, hV, hV0, mul_le_mul_of_nonneg_left hC0 hT.le, hLarge]
@@ -272,7 +271,8 @@ theorem IsNLSSolution.false_of_exterior_potential_bound
   let b := |virialFirstDeriv (virialWeight Q) (u 0) (Du 0)|
   have hB : 0 ≤ B := integral_nonneg (fun x ↦ mul_nonneg (virialWeight_nonneg Q x) (sq_nonneg _))
   obtain ⟨T, hT, hLarge⟩ := exists_time_quadratic_dominates (c := b) ha hB
-  have hV := variance_le_quadratic h hp.le hQ' hT.le (fun _ ht ↦ hTime ht.1)
+  have hV := variance_le_quadratic h hp.le (virialWeight_isTestFunction hQ') hT.le
+    (fun _ ht ↦ hTime ht.1)
     (fun t ht ↦ hAcc t ht.1)
   have hNonneg : 0 ≤ ∫ x, virialWeight Q x * ‖u T x‖ ^ 2 :=
     integral_nonneg (fun x ↦ mul_nonneg (virialWeight_nonneg Q x) (sq_nonneg _))
@@ -330,6 +330,70 @@ theorem IsNLSSolution.false_of_radial_forward
       ring
     _ ≤ L * ((1 + K) / Q) := mul_le_mul_of_nonneg_left hDiv hL
     _ = _ := by change _ = L / Q * (1 + K); ring
+
+/-- A cubic weak solution that stays radial and has uniformly negative energy
+cannot exist at all forward times, even if its initial variance is infinite. -/
+theorem IsNLSSolution.false_of_radial_cubic_forward
+    (h : IsNLSSolution 3 J u Du) (hTime : Ici (0 : ℝ) ⊆ interior J)
+    {e : ℝ} (he : 0 < e) (hEnergy : ∀ t ≥ 0, energy 3 (u t) (Du t) ≤ -e)
+    (hRadial : ∀ t ≥ 0, IsRadialAE (u t)) : False := by
+  obtain ⟨C, D, hC, hD, hBound⟩ := virialSecondDeriv_cubicVirialWeight_le
+  let M := mass (u 0)
+  let E := C * M ^ 3 + D * M
+  let R := max 1 (E / (8 * e))
+  have hM : 0 ≤ M := integral_nonneg (fun _ ↦ sq_nonneg _)
+  have hE : 0 ≤ E := by dsimp only [E]; positivity
+  have hR : 1 ≤ R := le_max_left _ _
+  have hR' : 0 < R := zero_lt_one.trans_le hR
+  have hRadius : E / (8 * e) ≤ R := le_max_right _ _
+  have hScale : E / R ^ 2 ≤ 8 * e := by
+    calc
+      _ ≤ E / R := div_le_div_of_nonneg_left hE hR' (by nlinarith)
+      _ ≤ _ := (div_le_iff₀ hR').mpr (by
+        simpa only [mul_comm (8 * e)] using
+          (div_le_iff₀ (by positivity : 0 < 8 * e)).mp hRadius)
+  let A := cubicVirialWeight R
+  let V (s : ℝ) := ∫ x, A x * ‖u s x‖ ^ 2
+  have hA : IsTestFunction A := cubicVirialWeight_isTestFunction hR'
+  obtain ⟨L, hL⟩ := cubicVirialWeight_bddBelow hR'
+  have hMass (t : ℝ) (ht : 0 ≤ t) : mass (u t) = M :=
+    h.mass_eq le_rfl ht (fun _ hs ↦ hTime hs.1)
+  have hLow (t : ℝ) (ht : 0 ≤ t) : L * M ≤ V t := by
+    have hData := (h.h1 t (interior_subset (hTime ht))).memL2.norm.integrable_sq
+    have hInt : Integrable (fun x ↦ A x * ‖u t x‖ ^ 2) :=
+      hData.mul_of_top_right (hA.1.continuous.memLp_top_of_hasCompactSupport hA.2 _)
+    rw [← hMass t ht, mass, ← integral_const_mul]
+    exact integral_mono (hData.const_mul L) hInt
+      (fun x ↦ mul_le_mul_of_nonneg_right (hL x) (sq_nonneg _))
+  let a := 4 * e
+  let b := |V 0| + |L| * M
+  let c := |virialFirstDeriv A (u 0) (Du 0)|
+  obtain ⟨T, hT, hLarge⟩ := exists_time_quadratic_dominates (c := c)
+    (show 0 < a by dsimp [a]; positivity) (show 0 ≤ b by dsimp [b]; positivity)
+  have hAcc (t : ℝ) (ht : t ∈ Icc 0 T) :
+      virialSecondDeriv 3 A (u t) (Du t) ≤ -2 * a := by
+    have hData := h.h1 t (interior_subset (hTime ht.1))
+    have hVir := hBound hR' hData (hRadial t ht.1)
+    rw [hMass t ht.1] at hVir
+    change virialSecondDeriv 3 A (u t) (Du t) ≤ 16 * energy 3 (u t) (Du t) + E / R ^ 2 at hVir
+    dsimp only [a]
+    linarith only [hVir, hScale, hEnergy t ht.1]
+  have hV := variance_le_quadratic h le_rfl hA hT.le (fun _ ht ↦ hTime ht.1) hAcc
+  change V T ≤ V 0 + T * c - a * T ^ 2 at hV
+  have hAbs := mul_le_mul_of_nonneg_right (neg_le_abs L) hM
+  dsimp only [b] at hLarge
+  linarith only [hV, hLow T hT.le, hLarge, hAbs, le_abs_self (V 0)]
+
+/-- Radial weak solutions with a uniform negative energy bound cannot be forward global
+in the full lower range 3 ≤ p ≤ 5. -/
+theorem IsNLSSolution.false_of_radial_forward_of_le_five
+    (h : IsNLSSolution p J u Du) (hp : 3 ≤ p) (hp₅ : p ≤ 5)
+    (hTime : Ici (0 : ℝ) ⊆ interior J) {e : ℝ} (he : 0 < e)
+    (hEnergy : ∀ t ≥ 0, energy p (u t) (Du t) ≤ -e)
+    (hRadial : ∀ t ≥ 0, IsRadialAE (u t)) : False := by
+  rcases hp.eq_or_lt with rfl | hp'
+  · exact h.false_of_radial_cubic_forward hTime he hEnergy hRadial
+  · exact h.false_of_radial_forward hp' hp₅ hTime he hEnergy hRadial
 
 /-- Uniformly negative energy gives a positive lower bound for the squared gradient
 on the forward ray, using mass conservation and the homogeneous inequality. -/
