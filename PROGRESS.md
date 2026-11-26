@@ -4,9 +4,9 @@
 [`Specification.lean`](BlowupFormalization/Specification.lean). It states
 finite-time blow-up and divergence of the gradient norm in both time
 directions for every real `p ≥ 3` and radial H¹ initial datum of negative
-energy. The localized virial argument uses radial tails for `3 < p ≤ 5`
-and the exterior evolution estimate in `main.pdf` for `p > 5`. The cubic
-endpoint with infinite variance requires a separate critical estimate.
+energy. The localized virial argument uses the weighted radial estimate at
+`p = 3`, radial tails for `3 < p ≤ 5`, and the exterior evolution estimate
+in `main.pdf` for `p > 5`.
 
 **Trust boundary:** Mathlib is the only direct dependency. All proofs, including
 results cited by the paper, must use only Lean's standard axioms `propext`,
@@ -110,15 +110,31 @@ These results were merged in
   radial. For `p > 5` it proves the forward contradiction in Section 5 given
   the exterior estimate of Proposition 3.2 and uniformly negative energy.
 
+These results were merged in
+[#20](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/20).
+
+## Cubic endpoint and two-sided conclusion
+
+- [`CubicVirialWeight.lean`](BlowupFormalization/CubicVirialWeight.lean)
+  constructs a smooth compact weight whose Hessian deficit controls the
+  weighted kinetic term needed at the cubic exponent.
+- The weighted Strauss bound in [`RadialTail.lean`](BlowupFormalization/RadialTail.lean)
+  and the absorption estimate in [`CubicVirial.lean`](BlowupFormalization/CubicVirial.lean)
+  yield the cubic forward contradiction for radial weak solutions with uniformly
+  negative energy and arbitrary initial variance.
+- [`MaximalLifespan.lean`](BlowupFormalization/MaximalLifespan.lean) turns exclusion
+  of both time rays into finite lifespan endpoints and uses the H¹ continuation
+  hypothesis to derive both gradient limits.
+- [`BlowupAssembly.lean`](BlowupFormalization/BlowupAssembly.lean) proves that
+  `MaximalH1SolutionTheory` and `SuperquinticExteriorEstimate` imply the exact
+  frozen proposition for every real `p ≥ 3`.
+
 ## Proof obligations
 
 - Prove the H¹ solution theory used by the paper: local existence and
   uniqueness, radiality preservation, energy conservation, and continuation.
-- Prove the critical cubic radial virial estimate for infinite initial variance.
 - Prove the required dispersive estimates (including the cited prerequisites),
   Lemma 3.1, and Proposition 3.2.
-- Combine the forward contradictions with conjugate time reversal
-  `u(t,x) ↦ conj (u(-t,x))` and the continuation criterion to prove the full target.
 
 ## Notes / decisions log
 
