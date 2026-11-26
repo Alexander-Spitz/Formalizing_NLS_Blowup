@@ -79,15 +79,25 @@ These results are merged on `main`.
 for every real `p ≥ 3`, every smooth compactly supported real weight, and
 every interior time of a weak H¹ solution. The proof uses the weak H¹ Sobolev
 embedding, continuity of the nonlinearity in L², and passage to the limit in
-the forced identity for spatially mollified solutions.
+the forced identity for spatially mollified solutions. It was merged in
+[#18](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/18).
+
+## Second localized virial identity for weak solutions
+
+[`WeakSecondVirial.lean`](BlowupFormalization/WeakSecondVirial.lean) proves
+(4.5) under the same assumptions as (4.4). Its acceleration corollary proves
+the estimate underlying (4.6) for the actual second derivative, with energy
+and mass evaluated at the differentiation time. The nonlinear term follows
+from the weak chain rule for the density `‖u‖ ^ (p + 1)`.
+[`Section5.lean`](BlowupFormalization/Section5.lean) applies both identities to
+rule out a weak solution on a time segment whenever (5.5) and (5.8) hold there.
 
 ## Proof obligations
 
 - Prove the H¹ solution theory used by the paper: local existence and
   uniqueness, radiality preservation, conservation, continuation, and the
   Gagliardo–Nirenberg inequality for the chosen H¹ representation.
-- Prove the second localized virial identity for weak H¹ solutions to apply
-  the acceleration bound in (4.6), and the classical virial identities as needed.
+- Prove the classical virial identities as needed.
 - Formalize the localized virial arguments for `3 ≤ p < 5` and for `p = 5`.
 - Prove the required dispersive estimates (including the cited prerequisites),
   Lemma 3.1, and Proposition 3.2.

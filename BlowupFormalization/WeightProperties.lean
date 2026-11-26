@@ -95,6 +95,43 @@ theorem IsTestFunction.laplacian {f : ℝ² → ℝ} (hf : IsTestFunction f) :
   have h₁ := (hf.partialDeriv 1).partialDeriv 1
   exact ⟨h₀.1.add h₁.1, h₀.2.add h₁.2⟩
 
+/-- The two spatial partial derivatives commute for a C² function. -/
+theorem partialDeriv_comm {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
+    {f : ℝ² → F} (hf : ContDiff ℝ 2 f) (j k : Fin 2) :
+    partialDeriv j (partialDeriv k f) = partialDeriv k (partialDeriv j f) := by
+  funext x
+  have hDiff : DifferentiableAt ℝ (fderiv ℝ f) x :=
+    ((hf.fderiv_right (m := 1) (by norm_num)).differentiable (by simp)) x
+  have hSym : IsSymmSndFDerivAt ℝ f x := hf.contDiffAt.isSymmSndFDerivAt
+    (by simp)
+  unfold partialDeriv
+  simp only [fderiv_clm_apply hDiff (differentiableAt_const _), fderiv_const_apply,
+    ContinuousLinearMap.comp_zero, zero_add, ContinuousLinearMap.flip_apply]
+  exact hSym.eq (EuclideanSpace.single j 1) (EuclideanSpace.single k 1)
+
+/-- A spatial partial derivative commutes with the Laplacian for a C³ function. -/
+theorem partialDeriv_laplacian {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
+    {f : ℝ² → F} (hf : ContDiff ℝ 3 f) (j : Fin 2) :
+    partialDeriv j (laplacian f) = laplacian (partialDeriv j f) := by
+  have hF (k : Fin 2) : ContDiff ℝ 2 (partialDeriv k f) :=
+    (hf.fderiv_right (by norm_num)).clm_apply contDiff_const
+  have hD (k : Fin 2) : Differentiable ℝ (partialDeriv k (partialDeriv k f)) :=
+    ((hF k).fderiv_right (m := 1) (by norm_num)).differentiable (by simp)
+    |>.clm_apply (differentiable_const _)
+  have hSwap (k : Fin 2) : partialDeriv j (partialDeriv k (partialDeriv k f)) =
+      partialDeriv k (partialDeriv k (partialDeriv j f)) := by
+    rw [partialDeriv_comm (hF k), partialDeriv_comm (hf.of_le (by norm_num)) j k]
+  have hAdd : partialDeriv j (laplacian f) =
+      partialDeriv j (partialDeriv 0 (partialDeriv 0 f)) +
+        partialDeriv j (partialDeriv 1 (partialDeriv 1 f)) := by
+    funext x
+    let d₀ := partialDeriv 0 (partialDeriv 0 f)
+    let d₁ := partialDeriv 1 (partialDeriv 1 f)
+    change (fderiv ℝ (d₀ + d₁) x) _ = (fderiv ℝ d₀ x) _ + (fderiv ℝ d₁ x) _
+    rw [fderiv_add (hD 0 x) (hD 1 x), add_apply]
+  rw [hAdd, hSwap 0, hSwap 1]
+  rfl
+
 /-- The partial derivatives of the squared Euclidean norm are twice the coordinates. -/
 private lemma partial_norm_sq (j : Fin 2) :
     partialDeriv j (fun x : ℝ² ↦ ‖x‖ ^ 2) = fun x ↦ 2 * x j := by

@@ -6,7 +6,7 @@ import BlowupFormalization.VirialApproximation
 /-! # First localized virial identity for weak solutions -/
 
 open Filter MeasureTheory Set Topology
-open scoped ContDiff ENNReal
+open scoped ContDiff
 
 namespace Blowup
 
@@ -72,16 +72,9 @@ theorem IsNLSSolution.hasDerivAt_localizedVariance
     {t : ℝ} (ht : t ∈ interior J) :
     HasDerivAt (fun s ↦ ∫ x, A x * ‖u s x‖ ^ 2)
       (virialFirstDeriv A (u t) (Du t)) t := by
-  have hq : 2 ≤ 2 * p := by linarith
-  have hp' : 2 < p := by linarith
-  have : Fact (1 ≤ ENNReal.ofReal (2 * p)) :=
-    ⟨ENNReal.one_le_ofReal.mpr (by linarith)⟩
   have hInterior := h.mono (J' := interior J) interior_subset
-  let hL (s : interior J) := (hInterior.h1 s s.property).memLp_of_two_le hq
-  have hN (s : interior J) := memLp_nonlinearity hp' (hL s)
-  have hNc := continuous_toLp_nonlinearity (f := fun s : interior J ↦ u s)
-    hp' hL (hInterior.continuous_toLp_of_two_le hq)
   exact hInterior.hasDerivAt_localizedVariance_of_nonlinearity_toLp
-    isOpen_interior hA hN hNc ht
+    isOpen_interior hA (fun s ↦ (hInterior.h1 s s.property).memLp_nonlinearity hp)
+    (hInterior.continuous_nonlinearity_toLp hp) ht
 
 end Blowup

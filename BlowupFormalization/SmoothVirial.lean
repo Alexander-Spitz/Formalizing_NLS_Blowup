@@ -14,8 +14,10 @@ private lemma hasDerivAt_time_slice {E : Type*} [NormedAddCommGroup E] [NormedSp
   exact ((hf.differentiable (by simp) (t, x)).hasFDerivAt).comp_hasDerivAt t hs
 
 set_option maxHeartbeats 400000 in
--- The dominated differentiation proof with the local time interval exceeds the default budget.
-private lemma integrable_hasDerivAt_integral_mul {J : Set ℝ} (hJ : IsOpen J)
+-- The dominated differentiation proof exceeds the default budget.
+/-- Differentiate under a fixed compactly supported spatial weight on an open time domain.
+The weighted derivative is integrable. -/
+theorem integrable_hasDerivAt_integral_mul {J : Set ℝ} (hJ : IsOpen J)
     {t : ℝ} (ht : t ∈ J) {A : ℝ² → ℝ} (hA : Continuous A) (hAc : HasCompactSupport A)
     {f f' : ℝ → ℝ² → ℝ}
     (hf : ContinuousOn (Function.uncurry f) (J ×ˢ Set.univ))
@@ -74,7 +76,8 @@ private lemma contDiff_partialDeriv {E : Type*} [NormedAddCommGroup E] [NormedSp
     ContDiff ℝ m (partialDeriv j f) :=
   (hf.fderiv_right hmn).clm_apply contDiff_const
 
-private lemma integral_im_mul_partialDeriv_eq_neg {f g : ℝ² → ℂ}
+/-- Integration by parts in one spatial coordinate, followed by taking imaginary parts. -/
+theorem integral_im_mul_partialDeriv_eq_neg {f g : ℝ² → ℂ}
     (hf : ContDiff ℝ 1 f) (hg : ContDiff ℝ 1 g) (hfc : HasCompactSupport f) (j : Fin 2) :
     ∫ x, (f x * partialDeriv j g x).im = -∫ x, (partialDeriv j f x * g x).im := by
   let e := EuclideanSpace.single j (1 : ℝ)
