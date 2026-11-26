@@ -46,7 +46,8 @@ private lemma isH1_of_contDiff {v : ℝ² → ℂ} (hv : ContDiff ℝ 1 v)
     simpa only [hCast, mul_comm, ψ] using
       integral_partialDeriv_mul_eq_neg_mul_partialDeriv hψ hv hψc j
 
-private lemma re_weighted_nonlinearity {p : ℝ} (hp : 3 ≤ p) (a : ℝ) (z : ℂ) :
+/-- Pairing the nonlinearity with the conjugate field gives the weighted potential density. -/
+theorem re_weighted_nonlinearity {p : ℝ} (hp : 3 ≤ p) (a : ℝ) (z : ℂ) :
     (starRingEnd ℂ z * ((a : ℂ) * nonlinearity p z)).re = a * ‖z‖ ^ (p + 1) := by
   calc
     _ = ((a : ℂ) * ((‖z‖ ^ (p - 1) : ℝ) * (z * starRingEnd ℂ z))).re := by

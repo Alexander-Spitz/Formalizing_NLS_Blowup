@@ -4,8 +4,9 @@
 [`Specification.lean`](BlowupFormalization/Specification.lean). It states
 finite-time blow-up and divergence of the gradient norm in both time
 directions for every real `p ≥ 3` and radial H¹ initial datum of negative
-energy. The proof combines `3 ≤ p < 5` (Ogawa–Tsutsumi), `p = 5`
-(Guevara–Carreon), and `p > 5` (`main.pdf`).
+energy. The localized virial argument uses radial tails for `3 < p ≤ 5`
+and the exterior evolution estimate in `main.pdf` for `p > 5`. The cubic
+endpoint with infinite variance requires a separate critical estimate.
 
 **Trust boundary:** Mathlib is the only direct dependency. All proofs, including
 results cited by the paper, must use only Lean's standard axioms `propext`,
@@ -91,19 +92,33 @@ and mass evaluated at the differentiation time. The nonlinear term follows
 from the weak chain rule for the density `‖u‖ ^ (p + 1)`.
 [`Section5.lean`](BlowupFormalization/Section5.lean) applies both identities to
 rule out a weak solution on a time segment whenever (5.5) and (5.8) hold there.
+These results were merged in
+[#19](https://github.com/Alexander-Spitz/Formalizing_NLS_Blowup/pull/19).
+
+## Mass conservation and forward virial contradictions
+
+- [`MassConservation.lean`](BlowupFormalization/MassConservation.lean) proves
+  conservation of mass on interior time segments for the frozen weak solutions.
+- [`GagliardoNirenberg.lean`](BlowupFormalization/GagliardoNirenberg.lean) proves
+  the homogeneous two-dimensional bound and the positive gradient lower bound
+  needed in (5.2).
+- [`RadialTail.lean`](BlowupFormalization/RadialTail.lean) proves the Strauss
+  bound for weak radial H¹ data, then bounds the exterior nonlinear integral.
+- [`VirialBlowupCriteria.lean`](BlowupFormalization/VirialBlowupCriteria.lean)
+  rules out a global forward solution with uniformly negative energy when
+  the initial variance is finite, or when `3 < p ≤ 5` and the solution stays
+  radial. For `p > 5` it proves the forward contradiction in Section 5 given
+  the exterior estimate of Proposition 3.2 and uniformly negative energy.
 
 ## Proof obligations
 
 - Prove the H¹ solution theory used by the paper: local existence and
-  uniqueness, radiality preservation, conservation, continuation, and the
-  Gagliardo–Nirenberg inequality for the chosen H¹ representation.
-- Prove the classical virial identities as needed.
-- Formalize the localized virial arguments for `3 ≤ p < 5` and for `p = 5`.
+  uniqueness, radiality preservation, energy conservation, and continuation.
+- Prove the critical cubic radial virial estimate for infinite initial variance.
 - Prove the required dispersive estimates (including the cited prerequisites),
   Lemma 3.1, and Proposition 3.2.
-- Assemble the superquintic contradiction from Section 5. Combine the three
-  power ranges, using conjugate time reversal `u(t,x) ↦ conj (u(-t,x))` and
-  the continuation criterion to prove the full target.
+- Combine the forward contradictions with conjugate time reversal
+  `u(t,x) ↦ conj (u(-t,x))` and the continuation criterion to prove the full target.
 
 ## Notes / decisions log
 

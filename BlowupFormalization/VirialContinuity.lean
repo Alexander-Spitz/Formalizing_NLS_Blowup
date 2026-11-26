@@ -38,7 +38,8 @@ theorem weighted_pairing_eq_inner {a f g : ℝ² → ℂ}
   change A x = a x at hax
   rw [RCLike.inner_apply', hfx, hM, hax, hgx]
 
-private lemma continuous_weighted_pairing {X : Type*} [TopologicalSpace X]
+/-- An essentially bounded coefficient gives a continuous pairing on L² trajectories. -/
+theorem continuous_weighted_pairing {X : Type*} [TopologicalSpace X]
     {a : ℝ² → ℂ} (ha : MemLp a ∞) {f g : X → ℝ² → ℂ}
     (hf : ∀ t, MemLp (f t) 2) (hg : ∀ t, MemLp (g t) 2)
     (hf_cont : Continuous (fun t ↦ (hf t).toLp (f t)))

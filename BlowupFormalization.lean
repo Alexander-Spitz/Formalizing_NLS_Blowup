@@ -4,14 +4,17 @@ import BlowupFormalization.H1Data
 import BlowupFormalization.H1Sobolev
 import BlowupFormalization.ExteriorEstimate
 import BlowupFormalization.ExteriorExponents
+import BlowupFormalization.GagliardoNirenberg
 import BlowupFormalization.LinearVirialAcceleration
 import BlowupFormalization.LocalizedVirial
 import BlowupFormalization.LocalizedVirialBound
+import BlowupFormalization.MassConservation
 import BlowupFormalization.MollifiedEquation
 import BlowupFormalization.MollifiedTimeRegularity
 import BlowupFormalization.Mollification
 import BlowupFormalization.MollifierConvergence
 import BlowupFormalization.NonlinearVirial
+import BlowupFormalization.RadialTail
 import BlowupFormalization.ScaleSelection
 import BlowupFormalization.Section5
 import BlowupFormalization.SmoothVirial
@@ -19,6 +22,7 @@ import BlowupFormalization.SolutionFacts
 import BlowupFormalization.Specification
 import BlowupFormalization.TimeReversal
 import BlowupFormalization.VirialApproximation
+import BlowupFormalization.VirialBlowupCriteria
 import BlowupFormalization.VirialContinuity
 import BlowupFormalization.VirialCurrentDerivative
 import BlowupFormalization.VirialWeight
