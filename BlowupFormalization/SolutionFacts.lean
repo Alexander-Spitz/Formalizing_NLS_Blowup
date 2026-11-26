@@ -24,7 +24,7 @@ theorem IsNLSSolution.mono (h : IsNLSSolution p J u Du) (hJ : J' ⊆ J) :
     h.weak_equation φ hφ hc (hs.trans (Set.prod_mono (interior_mono hJ) le_rfl))
 
 /-- The norm in `L²` is the square root of the integral of the squared pointwise norm. -/
-private lemma norm_toLp_two {f : ℝ² → ℂ} (hf : MemLp f 2) :
+theorem norm_toLp_two {f : ℝ² → ℂ} (hf : MemLp f 2) :
     ‖hf.toLp f‖ = Real.sqrt (∫ x, ‖f x‖ ^ 2) := by
   rw [Lp.norm_toLp, toReal_eLpNorm, lpNorm_eq_integral_norm_rpow_toReal
     (by norm_num) (by norm_num) hf.aestronglyMeasurable]

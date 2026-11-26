@@ -408,7 +408,8 @@ private lemma eLpNorm_fderiv_le_partialDeriv {u : ℝ² → ℂ} (hu : ContDiff 
   simpa only [eLpNorm_norm _ (hCont 0).aestronglyMeasurable,
     eLpNorm_norm _ (hCont 1).aestronglyMeasurable] using hSum
 
-private lemma eLpNorm_two_eq_ofReal_sqrt_mass {u : ℝ² → ℂ} (hu : MemLp u 2) :
+/-- The extended L² norm is the square root of the mass, coerced to the extended reals. -/
+theorem eLpNorm_two_eq_ofReal_sqrt_mass {u : ℝ² → ℂ} (hu : MemLp u 2) :
     eLpNorm u 2 volume = ENNReal.ofReal (Real.sqrt (mass u)) := by
   rw [hu.eLpNorm_eq_integral_rpow_norm (by norm_num) (by norm_num)]
   simp [mass, Real.sqrt_eq_rpow, one_div]
